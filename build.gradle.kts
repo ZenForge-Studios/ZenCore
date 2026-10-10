@@ -1,6 +1,6 @@
 plugins {
-    `java-library`
     `maven-publish`
+    kotlin("jvm") version "2.1.10"
 }
 
 group = "com.cuac_xd.zencore"
@@ -15,8 +15,9 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
-    
-    // Optional integrations - compileOnly
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.10")
+
+    // Optional integrations
     compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
         exclude(group = "org.bukkit")
     }
@@ -28,16 +29,22 @@ dependencies {
     testImplementation("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
-    }
     withSourcesJar()
 }
 
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
-    options.release.set(21)
+tasks.jar {
+    archiveClassifier.set("")
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    }) {
+        exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 publishing {
