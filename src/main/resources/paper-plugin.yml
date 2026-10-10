@@ -1,0 +1,9 @@
+name: ZenCore
+version: '${version}'
+main: com.cuac_xd.zencore.ZenCorePlugin
+api-version: '1.21'
+author: cuac_xd
+description: Core library and unified effects/conditions engine for Zen plugins
+softdepend:
+  - Vault
+  - PlaceholderAPI
