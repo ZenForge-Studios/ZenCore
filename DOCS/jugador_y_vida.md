@@ -1,15 +1,15 @@
-# CategorÃ­a: Jugador & Vida
+# Categoría: Jugador & Vida
 
-Esta secciÃ³n documenta los efectos correspondientes a **Jugador & Vida** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
+Esta sección documenta los efectos correspondientes a **Jugador & Vida** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
 
 ---
 
 ## `add_potion_effect`
 
 - **Identificador / Alias:** `ADD_POTION_EFFECT / POTION`
-- **DescripciÃ³n:** Aplica un efecto de poción de Minecraft con duración y amplificador.
+- **Descripción:** Aplica un efecto de poción de Minecraft con duración y amplificador.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: ADD_POTION_EFFECT
@@ -24,9 +24,9 @@ effects:
 ## `clear_effect`
 
 - **Identificador / Alias:** `CLEAR_EFFECT`
-- **DescripciÃ³n:** Elimina todos los efectos de poción activos en la entidad.
+- **Descripción:** Elimina todos los efectos de poción activos en la entidad.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: CLEAR_EFFECT
@@ -38,9 +38,9 @@ effects:
 ## `damage`
 
 - **Identificador / Alias:** `DAMAGE / DAMAGE_ENTITY`
-- **DescripciÃ³n:** Aplica daño a la entidad objetivo o al portador.
+- **Descripción:** Aplica daño a la entidad objetivo o al portador.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: DAMAGE
@@ -53,9 +53,9 @@ effects:
 ## `experience`
 
 - **Identificador / Alias:** `EXPERIENCE`
-- **DescripciÃ³n:** Entrega puntos de experiencia planos al jugador.
+- **Descripción:** Entrega puntos de experiencia planos al jugador.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: EXPERIENCE
@@ -67,9 +67,9 @@ effects:
 ## `food`
 
 - **Identificador / Alias:** `FOOD`
-- **DescripciÃ³n:** Incrementa o disminuye el nivel de comida/hambre del jugador.
+- **Descripción:** Incrementa o disminuye el nivel de comida/hambre del jugador.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: FOOD
@@ -81,9 +81,9 @@ effects:
 ## `heal`
 
 - **Identificador / Alias:** `HEAL`
-- **DescripciÃ³n:** Restaura puntos de salud a una entidad viva sin superar su salud máxima.
+- **Descripción:** Restaura puntos de salud a una entidad viva sin superar su salud máxima.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: HEAL
@@ -96,9 +96,9 @@ effects:
 ## `level`
 
 - **Identificador / Alias:** `LEVEL`
-- **DescripciÃ³n:** Otorga niveles completos de experiencia.
+- **Descripción:** Otorga niveles completos de experiencia.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: LEVEL
@@ -110,9 +110,9 @@ effects:
 ## `remove_potion_effect`
 
 - **Identificador / Alias:** `REMOVE_POTION_EFFECT`
-- **DescripciÃ³n:** Elimina un efecto de poción específico.
+- **Descripción:** Elimina un efecto de poción específico.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: REMOVE_POTION_EFFECT
@@ -125,9 +125,9 @@ effects:
 ## `saturation`
 
 - **Identificador / Alias:** `SATURATION`
-- **DescripciÃ³n:** Añade puntos de saturación al jugador.
+- **Descripción:** Añade puntos de saturación al jugador.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: SATURATION
@@ -139,9 +139,9 @@ effects:
 ## `set_health`
 
 - **Identificador / Alias:** `SET_HEALTH`
-- **DescripciÃ³n:** Establece la salud de la entidad en un valor exacto.
+- **Descripción:** Establece la salud de la entidad en un valor exacto.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: SET_HEALTH

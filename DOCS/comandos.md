@@ -1,33 +1,33 @@
-# CategorÃ­a: Comandos
+# Categoría: Comandos
 
-Esta secciÃ³n documenta los efectos correspondientes a **Comandos** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
+Esta sección recopila todos los efectos pertenecientes a **comandos** registrados en ZenCore.
 
 ---
 
-## `console_command`
+## `kick`
 
-- **Identificador / Alias:** `CONSOLE_COMMAND`
-- **DescripciÃ³n:** Ejecuta un comando con permisos de la consola de Minecraft.
+Desconecta y expulsa al jugador del servidor con un mensaje personalizado.
 
-### Ejemplo de ConfiguraciÃ³n
+## Ejemplo de Configuración
+
 ```yaml
 effects:
- - type: CONSOLE_COMMAND
-    command: "eco give %player% 100"
+  - type: KICK
+    reason: '<red>Expulsado por ZenCore</red>'
 ```
 
 ---
 
-## `player_command`
+## `run_command`
 
-- **Identificador / Alias:** `PLAYER_COMMAND`
-- **DescripciÃ³n:** Ejecuta un comando en nombre del jugador.
+Alias de PLAYER_COMMAND para ejecutar un comando.
 
-### Ejemplo de ConfiguraciÃ³n
+## Ejemplo de Configuración
+
 ```yaml
 effects:
- - type: PLAYER_COMMAND
-    command: "spawn"
+  - type: RUN_COMMAND
+    command: 'spawn'
 ```
 
 ---

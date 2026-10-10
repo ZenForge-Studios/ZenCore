@@ -1,15 +1,15 @@
-# CategorÃ­a: Nuevos Efectos Extendidos de Combate y Estrategia
+# Categoría: Nuevos Efectos Extendidos de Combate y Estrategia
 
-Esta secciÃ³n documenta los efectos correspondientes a **Nuevos Efectos Extendidos de Combate y Estrategia** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
+Esta sección documenta los efectos correspondientes a **Nuevos Efectos Extendidos de Combate y Estrategia** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
 
 ---
 
 ## `apply_vulnerability`
 
 - **Identificador / Alias:** `APPLY_VULNERABILITY`
-- **DescripciÃ³n:** Aplica vulnerabilidad y lentitud temporal al objetivo golpeado.
+- **Descripción:** Aplica vulnerabilidad y lentitud temporal al objetivo golpeado.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: APPLY_VULNERABILITY
@@ -22,9 +22,9 @@ effects:
 ## `bounce_attack`
 
 - **Identificador / Alias:** `BOUNCE_ATTACK`
-- **DescripciÃ³n:** El ataque rebota sucesivamente entre múltiples enemigos cercanos.
+- **Descripción:** El ataque rebota sucesivamente entre múltiples enemigos cercanos.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: BOUNCE_ATTACK
@@ -38,9 +38,9 @@ effects:
 ## `cleave`
 
 - **Identificador / Alias:** `CLEAVE`
-- **DescripciÃ³n:** Inflige un porcentaje del daño del golpe principal a todas las criaturas cercanas.
+- **Descripción:** Inflige un porcentaje del daño del golpe principal a todas las criaturas cercanas.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: CLEAVE
@@ -53,9 +53,9 @@ effects:
 ## `disarm`
 
 - **Identificador / Alias:** `DISARM`
-- **DescripciÃ³n:** Desarma al jugador oponente arrojando al suelo el ítem que sostiene en la mano principal.
+- **Descripción:** Desarma al jugador oponente arrojando al suelo el ítem que sostiene en la mano principal.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: DISARM
@@ -66,9 +66,9 @@ effects:
 ## `execute`
 
 - **Identificador / Alias:** `EXECUTE`
-- **DescripciÃ³n:** Elimina instantáneamente al objetivo si su vida se encuentra por debajo del porcentaje configurado.
+- **Descripción:** Elimina instantáneamente al objetivo si su vida se encuentra por debajo del porcentaje configurado.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: EXECUTE
@@ -80,9 +80,9 @@ effects:
 ## `poison_cloud`
 
 - **Identificador / Alias:** `POISON_CLOUD`
-- **DescripciÃ³n:** Invoca una nube tóxica que envenena a todas las criaturas enemigas en el radio.
+- **Descripción:** Invoca una nube tóxica que envenena a todas las criaturas enemigas en el radio.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: POISON_CLOUD
@@ -95,9 +95,9 @@ effects:
 ## `reflect_projectile`
 
 - **Identificador / Alias:** `REFLECT_PROJECTILE`
-- **DescripciÃ³n:** Invierte la dirección y velocidad de un proyectil que se aproxima.
+- **Descripción:** Invierte la dirección y velocidad de un proyectil que se aproxima.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: REFLECT_PROJECTILE
@@ -108,9 +108,9 @@ effects:
 ## `shield_break`
 
 - **Identificador / Alias:** `SHIELD_BREAK`
-- **DescripciÃ³n:** Desactiva el escudo del oponente y lo deja en tiempo de recarga si estaba bloqueando.
+- **Descripción:** Desactiva el escudo del oponente y lo deja en tiempo de recarga si estaba bloqueando.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: SHIELD_BREAK
@@ -121,9 +121,9 @@ effects:
 ## `thorns_damage`
 
 - **Identificador / Alias:** `THORNS_DAMAGE`
-- **DescripciÃ³n:** Refleja daño directo de vuelta al atacante al recibir un impacto.
+- **Descripción:** Refleja daño directo de vuelta al atacante al recibir un impacto.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: THORNS_DAMAGE
@@ -135,9 +135,9 @@ effects:
 ## `true_damage`
 
 - **Identificador / Alias:** `TRUE_DAMAGE`
-- **DescripciÃ³n:** Inflige daño puro directo que ignora la reducción de armadura, encantamientos de protección y escudos.
+- **Descripción:** Inflige daño puro directo que ignora la reducción de armadura, encantamientos de protección y escudos.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: TRUE_DAMAGE
@@ -149,9 +149,9 @@ effects:
 ## `wither_damage`
 
 - **Identificador / Alias:** `WITHER_DAMAGE`
-- **DescripciÃ³n:** Aplica el efecto de daño degenerativo de Wither.
+- **Descripción:** Aplica el efecto de daño degenerativo de Wither.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: WITHER_DAMAGE

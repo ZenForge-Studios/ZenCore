@@ -1,15 +1,15 @@
-# CategorÃ­a: Entidades & Proyectiles
+# Categoría: Entidades & Proyectiles
 
-Esta secciÃ³n documenta los efectos correspondientes a **Entidades & Proyectiles** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
+Esta sección documenta los efectos correspondientes a **Entidades & Proyectiles** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
 
 ---
 
 ## `launch_projectile`
 
 - **Identificador / Alias:** `LAUNCH_PROJECTILE`
-- **DescripciÃ³n:** Dispara un proyectil (`SNOWBALL`, `FIREBALL`) desde el jugador.
+- **Descripción:** Dispara un proyectil (`SNOWBALL`, `FIREBALL`) desde el jugador.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: LAUNCH_PROJECTILE
@@ -22,9 +22,9 @@ effects:
 ## `remove_entity`
 
 - **Identificador / Alias:** `REMOVE_ENTITY`
-- **DescripciÃ³n:** Elimina la entidad objetivo del mundo.
+- **Descripción:** Elimina la entidad objetivo del mundo.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: REMOVE_ENTITY
@@ -35,9 +35,9 @@ effects:
 ## `spawn_entity`
 
 - **Identificador / Alias:** `SPAWN_ENTITY`
-- **DescripciÃ³n:** Spawnea una entidad en la ubicación del objetivo.
+- **Descripción:** Spawnea una entidad en la ubicación del objetivo.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: SPAWN_ENTITY

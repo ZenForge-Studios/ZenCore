@@ -1,35 +1,21 @@
-# CategorÃ­a: Sonidos
+# Categoría: Sonidos
 
-Esta secciÃ³n documenta los efectos correspondientes a **Sonidos** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
+Esta sección recopila todos los efectos pertenecientes a **sonidos** registrados en ZenCore.
 
 ---
 
-## `play_sound`
+## `sound`
 
-- **Identificador / Alias:** `PLAY_SOUND / SOUND`
-- **DescripciÃ³n:** Reproduce un sonido de Minecraft con volumen y tono ajustables.
+Alias de PLAY_SOUND para reproducir sonidos de Minecraft.
 
-### Ejemplo de ConfiguraciÃ³n
+## Ejemplo de Configuración
+
 ```yaml
 effects:
- - type: PLAY_SOUND
-    sound: ENTITY_WITHER_SPAWN
+  - type: SOUND
+    sound: ENTITY_EXPERIENCE_ORB_PICKUP
     volume: 1.0
-    pitch: 1.2
-```
-
----
-
-## `stop_sound`
-
-- **Identificador / Alias:** `STOP_SOUND`
-- **DescripciÃ³n:** Detiene un sonido en curso o todos los sonidos del jugador.
-
-### Ejemplo de ConfiguraciÃ³n
-```yaml
-effects:
- - type: STOP_SOUND
-    sound: MUSIC_DISC_PIGSTEP
+    pitch: 1.0
 ```
 
 ---

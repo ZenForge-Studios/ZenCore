@@ -1,15 +1,15 @@
-# CategorÃ­a: Nuevos Efectos de Movilidad y Parkour
+# Categoría: Nuevos Efectos de Movilidad y Parkour
 
-Esta secciÃ³n documenta los efectos correspondientes a **Nuevos Efectos de Movilidad y Parkour** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
+Esta sección documenta los efectos correspondientes a **Nuevos Efectos de Movilidad y Parkour** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
 
 ---
 
 ## `boost_elytra`
 
 - **Identificador / Alias:** `BOOST_ELYTRA`
-- **DescripciÃ³n:** Otorga un cohete de propulsión instantáneo si el jugador está usando élitros en vuelo.
+- **Descripción:** Otorga un cohete de propulsión instantáneo si el jugador está usando élitros en vuelo.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: BOOST_ELYTRA
@@ -21,9 +21,9 @@ effects:
 ## `dash`
 
 - **Identificador / Alias:** `DASH`
-- **DescripciÃ³n:** Impulsa hacia adelante en la dirección de la mirada del jugador.
+- **Descripción:** Impulsa hacia adelante en la dirección de la mirada del jugador.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: DASH
@@ -35,9 +35,9 @@ effects:
 ## `double_jump`
 
 - **Identificador / Alias:** `DOUBLE_JUMP`
-- **DescripciÃ³n:** Otorga un impulso en el aire estilo doble salto con partículas de nube.
+- **Descripción:** Otorga un impulso en el aire estilo doble salto con partículas de nube.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: DOUBLE_JUMP
@@ -49,9 +49,9 @@ effects:
 ## `float`
 
 - **Identificador / Alias:** `FLOAT / LEVITATE`
-- **DescripciÃ³n:** Eleva por los aires a la entidad objetivo.
+- **Descripción:** Eleva por los aires a la entidad objetivo.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: LEVITATE
@@ -64,9 +64,9 @@ effects:
 ## `grappling_hook`
 
 - **Identificador / Alias:** `GRAPPLING_HOOK`
-- **DescripciÃ³n:** Propulsa al jugador a toda velocidad hacia la ubicación o bloque seleccionado.
+- **Descripción:** Propulsa al jugador a toda velocidad hacia la ubicación o bloque seleccionado.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: GRAPPLING_HOOK
@@ -78,9 +78,9 @@ effects:
 ## `safe_fall`
 
 - **Identificador / Alias:** `SAFE_FALL`
-- **DescripciÃ³n:** Resetea la distancia de caída y otorga caída lenta temporal.
+- **Descripción:** Resetea la distancia de caída y otorga caída lenta temporal.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: SAFE_FALL
@@ -91,9 +91,9 @@ effects:
 ## `set_glide`
 
 - **Identificador / Alias:** `SET_GLIDE`
-- **DescripciÃ³n:** Activa o desactiva el planeo de élitros en el jugador.
+- **Descripción:** Activa o desactiva el planeo de élitros en el jugador.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: SET_GLIDE
@@ -105,9 +105,9 @@ effects:
 ## `wall_climb`
 
 - **Identificador / Alias:** `WALL_CLIMB`
-- **DescripciÃ³n:** Otorga impulso vertical continuo para trepar paredes lisas.
+- **Descripción:** Otorga impulso vertical continuo para trepar paredes lisas.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: WALL_CLIMB

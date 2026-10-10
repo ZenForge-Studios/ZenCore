@@ -1,15 +1,15 @@
-# CategorÃ­a: Mundo & Bloques
+# Categoría: Mundo & Bloques
 
-Esta secciÃ³n documenta los efectos correspondientes a **Mundo & Bloques** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
+Esta sección documenta los efectos correspondientes a **Mundo & Bloques** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
 
 ---
 
 ## `break_block`
 
 - **Identificador / Alias:** `BREAK_BLOCK`
-- **DescripciÃ³n:** Rompe el bloque involucrado.
+- **Descripción:** Rompe el bloque involucrado.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: BREAK_BLOCK
@@ -21,9 +21,9 @@ effects:
 ## `explosion`
 
 - **Identificador / Alias:** `EXPLOSION`
-- **DescripciÃ³n:** Genera una explosión en la ubicación.
+- **Descripción:** Genera una explosión en la ubicación.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: EXPLOSION
@@ -37,9 +37,9 @@ effects:
 ## `lightning`
 
 - **Identificador / Alias:** `LIGHTNING`
-- **DescripciÃ³n:** Invoca un relámpago en la ubicación del objetivo o bloque.
+- **Descripción:** Invoca un relámpago en la ubicación del objetivo o bloque.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: LIGHTNING
@@ -52,9 +52,9 @@ effects:
 ## `set_block`
 
 - **Identificador / Alias:** `SET_BLOCK / PLACE_BLOCK`
-- **DescripciÃ³n:** Cambia el bloque en la posición por otro material.
+- **Descripción:** Cambia el bloque en la posición por otro material.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: SET_BLOCK

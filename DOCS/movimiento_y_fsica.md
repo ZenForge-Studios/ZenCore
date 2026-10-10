@@ -1,15 +1,15 @@
-# CategorÃ­a: Movimiento & Física
+# Categoría: Movimiento & Física
 
-Esta secciÃ³n documenta los efectos correspondientes a **Movimiento & Física** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
+Esta sección documenta los efectos correspondientes a **Movimiento & Física** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
 
 ---
 
 ## `knockback`
 
 - **Identificador / Alias:** `KNOCKBACK`
-- **DescripciÃ³n:** Aplica retroceso físico direccional a la entidad.
+- **Descripción:** Aplica retroceso físico direccional a la entidad.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: KNOCKBACK
@@ -21,9 +21,9 @@ effects:
 ## `launch`
 
 - **Identificador / Alias:** `LAUNCH`
-- **DescripciÃ³n:** Propulsa a la entidad en la dirección a la que está mirando.
+- **Descripción:** Propulsa a la entidad en la dirección a la que está mirando.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: LAUNCH
@@ -36,9 +36,9 @@ effects:
 ## `pull`
 
 - **Identificador / Alias:** `PULL`
-- **DescripciÃ³n:** Atrae a la entidad objetivo hacia la posición del jugador.
+- **Descripción:** Atrae a la entidad objetivo hacia la posición del jugador.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: PULL
@@ -50,9 +50,9 @@ effects:
 ## `push`
 
 - **Identificador / Alias:** `PUSH`
-- **DescripciÃ³n:** Empuja a la entidad objetivo lejos del jugador.
+- **Descripción:** Empuja a la entidad objetivo lejos del jugador.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: PUSH
@@ -64,9 +64,9 @@ effects:
 ## `teleport`
 
 - **Identificador / Alias:** `TELEPORT`
-- **DescripciÃ³n:** Teletransporta al jugador hacia la ubicación del objetivo.
+- **Descripción:** Teletransporta al jugador hacia la ubicación del objetivo.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: TELEPORT
@@ -78,9 +78,9 @@ effects:
 ## `velocity`
 
 - **Identificador / Alias:** `VELOCITY`
-- **DescripciÃ³n:** Aplica un vector de aceleración en los ejes X, Y, Z.
+- **Descripción:** Aplica un vector de aceleración en los ejes X, Y, Z.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: VELOCITY

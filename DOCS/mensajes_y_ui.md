@@ -1,15 +1,15 @@
-# CategorÃ­a: Mensajes & UI
+# Categoría: Mensajes & UI
 
-Esta secciÃ³n documenta los efectos correspondientes a **Mensajes & UI** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
+Esta sección documenta los efectos correspondientes a **Mensajes & UI** disponibles en **ZenCore** y compartidos por **ZenCustomItems** y **ZenEnchants**.
 
 ---
 
 ## `actionbar`
 
 - **Identificador / Alias:** `ACTIONBAR`
-- **DescripciÃ³n:** Muestra un texto flotante en la barra de acción sobre la hotbar.
+- **Descripción:** Muestra un texto flotante en la barra de acción sobre la hotbar.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: ACTIONBAR
@@ -21,9 +21,9 @@ effects:
 ## `bossbar`
 
 - **Identificador / Alias:** `BOSSBAR`
-- **DescripciÃ³n:** Muestra una barra de jefe personalizada en la parte superior.
+- **Descripción:** Muestra una barra de jefe personalizada en la parte superior.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: BOSSBAR
@@ -37,9 +37,9 @@ effects:
 ## `message`
 
 - **Identificador / Alias:** `MESSAGE`
-- **DescripciÃ³n:** Envía un mensaje formateado al chat con soporte de MiniMessage y variables.
+- **Descripción:** Envía un mensaje formateado al chat con soporte de MiniMessage y variables.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: MESSAGE
@@ -51,9 +51,9 @@ effects:
 ## `title`
 
 - **Identificador / Alias:** `TITLE`
-- **DescripciÃ³n:** Muestra un título y subtítulo en el centro de la pantalla.
+- **Descripción:** Muestra un título y subtítulo en el centro de la pantalla.
 
-### Ejemplo de ConfiguraciÃ³n
+### Ejemplo de Configuración
 ```yaml
 effects:
  - type: TITLE
