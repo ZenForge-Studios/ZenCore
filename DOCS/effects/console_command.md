@@ -1,0 +1,16 @@
+# `console_command`
+
+- **Categoría:** comandos
+
+- **Identificador / Alias:** `CONSOLE_COMMAND`
+- **Descripción:** Ejecuta un comando con permisos de la consola de Minecraft.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: CONSOLE_COMMAND
+    command: "eco give %player% 100"
+```
+
+---
+

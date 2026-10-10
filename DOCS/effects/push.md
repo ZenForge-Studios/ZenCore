@@ -1,0 +1,16 @@
+# `push`
+
+- **Categoría:** movimiento_y_fsica
+
+- **Identificador / Alias:** `PUSH`
+- **Descripción:** Empuja a la entidad objetivo lejos del jugador.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: PUSH
+    strength: 1.5
+```
+
+---
+

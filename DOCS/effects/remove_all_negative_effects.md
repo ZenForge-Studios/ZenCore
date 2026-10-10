@@ -1,0 +1,15 @@
+# `remove_all_negative_effects`
+
+- **Categoría:** nuevos_efectos_de_entidad_auras_y_utilidad
+
+- **Identificador / Alias:** `REMOVE_ALL_NEGATIVE_EFFECTS`
+- **Descripción:** Limpia todos los efectos negativos activos (veneno, lentitud, wither, fatiga, etc.).
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: REMOVE_ALL_NEGATIVE_EFFECTS
+```
+
+---
+

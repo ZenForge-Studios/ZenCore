@@ -1,0 +1,15 @@
+# `wall_climb`
+
+- **Categoría:** nuevos_efectos_de_movilidad_y_parkour
+
+- **Identificador / Alias:** `WALL_CLIMB`
+- **Descripción:** Otorga impulso vertical continuo para trepar paredes lisas.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: WALL_CLIMB
+```
+
+---
+

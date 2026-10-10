@@ -1,0 +1,16 @@
+# `sphere_mine`
+
+- **Categoría:** nuevos_efectos_de_minera_agricultura_y_entorno
+
+- **Identificador / Alias:** `SPHERE_MINE`
+- **Descripción:** Mina una esfera perfecta alrededor del bloque roto.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: SPHERE_MINE
+    radius: 3
+```
+
+---
+

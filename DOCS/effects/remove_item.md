@@ -1,0 +1,17 @@
+# `remove_item`
+
+- **Categoría:** inventario
+
+- **Identificador / Alias:** `REMOVE_ITEM`
+- **Descripción:** Retira un ítem del inventario del jugador.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: REMOVE_ITEM
+    item: COAL
+    amount: 1
+```
+
+---
+

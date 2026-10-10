@@ -1,0 +1,16 @@
+# `remove_variable`
+
+- **Categoría:** estado_del_tem
+
+- **Identificador / Alias:** `REMOVE_VARIABLE`
+- **Descripción:** Elimina una variable almacenada.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: REMOVE_VARIABLE
+    variable: combo
+```
+
+---
+

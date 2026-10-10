@@ -1,0 +1,16 @@
+# `execute`
+
+- **Categoría:** nuevos_efectos_extendidos_de_combate_y_estrategia
+
+- **Identificador / Alias:** `EXECUTE`
+- **Descripción:** Elimina instantáneamente al objetivo si su vida se encuentra por debajo del porcentaje configurado.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: EXECUTE
+    threshold: 15.0
+```
+
+---
+

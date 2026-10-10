@@ -1,0 +1,15 @@
+# `reflect_projectile`
+
+- **Categoría:** nuevos_efectos_extendidos_de_combate_y_estrategia
+
+- **Identificador / Alias:** `REFLECT_PROJECTILE`
+- **Descripción:** Invierte la dirección y velocidad de un proyectil que se aproxima.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: REFLECT_PROJECTILE
+```
+
+---
+

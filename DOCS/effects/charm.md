@@ -1,0 +1,15 @@
+# `charm`
+
+- **Categoría:** nuevos_efectos_de_entidad_auras_y_utilidad
+
+- **Identificador / Alias:** `CHARM`
+- **Descripción:** Enamora instantáneamente a los animales objetivos listos para reproducirse.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: CHARM
+```
+
+---
+

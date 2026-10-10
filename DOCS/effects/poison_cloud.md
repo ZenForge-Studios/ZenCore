@@ -1,0 +1,17 @@
+# `poison_cloud`
+
+- **Categoría:** nuevos_efectos_extendidos_de_combate_y_estrategia
+
+- **Identificador / Alias:** `POISON_CLOUD`
+- **Descripción:** Invoca una nube tóxica que envenena a todas las criaturas enemigas en el radio.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: POISON_CLOUD
+    radius: 4.0
+    duration: 120
+```
+
+---
+

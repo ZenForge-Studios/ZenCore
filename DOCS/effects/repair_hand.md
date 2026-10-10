@@ -1,0 +1,16 @@
+# `repair_hand`
+
+- **Categoría:** nuevos_efectos_de_entidad_auras_y_utilidad
+
+- **Identificador / Alias:** `REPAIR_HAND / REPAIR_ARMOR`
+- **Descripción:** Restaura la durabilidad del ítem en mano o de todas las piezas de armadura equipadas.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: REPAIR_ARMOR
+    amount: 40
+```
+
+---
+

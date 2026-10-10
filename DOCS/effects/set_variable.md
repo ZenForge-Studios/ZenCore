@@ -1,0 +1,17 @@
+# `set_variable`
+
+- **Categoría:** estado_del_tem
+
+- **Identificador / Alias:** `SET_VARIABLE`
+- **Descripción:** Establece el valor de una variable del ítem.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: SET_VARIABLE
+    variable: combo
+    value: 0
+```
+
+---
+

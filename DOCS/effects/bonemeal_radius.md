@@ -1,0 +1,16 @@
+# `bonemeal_radius`
+
+- **Categoría:** nuevos_efectos_de_minera_agricultura_y_entorno
+
+- **Identificador / Alias:** `BONEMEAL_RADIUS`
+- **Descripción:** Aplica polvo de hueso y acelera la maduración de cultivos en área.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: BONEMEAL_RADIUS
+    radius: 4
+```
+
+---
+

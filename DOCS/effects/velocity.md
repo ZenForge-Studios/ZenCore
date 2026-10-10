@@ -1,0 +1,18 @@
+# `velocity`
+
+- **Categoría:** movimiento_y_fsica
+
+- **Identificador / Alias:** `VELOCITY`
+- **Descripción:** Aplica un vector de aceleración en los ejes X, Y, Z.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: VELOCITY
+    x: 0.0
+    y: 1.0 # Impulso vertical alto
+    z: 0.0
+```
+
+---
+

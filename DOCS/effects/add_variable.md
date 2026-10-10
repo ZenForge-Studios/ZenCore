@@ -1,0 +1,17 @@
+# `add_variable`
+
+- **Categoría:** estado_del_tem
+
+- **Identificador / Alias:** `ADD_VARIABLE`
+- **Descripción:** Suma una cantidad numérica a una variable persistente del ítem.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: ADD_VARIABLE
+    variable: combo
+    amount: 1
+```
+
+---
+

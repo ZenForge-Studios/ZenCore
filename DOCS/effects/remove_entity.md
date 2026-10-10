@@ -1,0 +1,15 @@
+# `remove_entity`
+
+- **Categoría:** entidades_y_proyectiles
+
+- **Identificador / Alias:** `REMOVE_ENTITY`
+- **Descripción:** Elimina la entidad objetivo del mundo.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: REMOVE_ENTITY
+```
+
+---
+

@@ -1,0 +1,16 @@
+# `thorns_damage`
+
+- **Categoría:** nuevos_efectos_extendidos_de_combate_y_estrategia
+
+- **Identificador / Alias:** `THORNS_DAMAGE`
+- **Descripción:** Refleja daño directo de vuelta al atacante al recibir un impacto.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: THORNS_DAMAGE
+    damage: 3.0
+```
+
+---
+

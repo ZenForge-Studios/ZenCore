@@ -1,0 +1,15 @@
+# `smelt_ore`
+
+- **Categoría:** nuevos_efectos_de_minera_agricultura_y_entorno
+
+- **Identificador / Alias:** `SMELT_ORE`
+- **Descripción:** Funde menas de hierro, oro y cobre al instante en sus respectivos lingotes.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: SMELT_ORE
+```
+
+---
+

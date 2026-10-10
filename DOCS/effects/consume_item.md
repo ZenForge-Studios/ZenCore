@@ -1,0 +1,16 @@
+# `consume_item`
+
+- **Categoría:** inventario
+
+- **Identificador / Alias:** `CONSUME_ITEM`
+- **Descripción:** Reduce la cantidad del ítem en la mano.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: CONSUME_ITEM
+    amount: 1
+```
+
+---
+

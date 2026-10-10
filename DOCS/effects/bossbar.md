@@ -1,0 +1,18 @@
+# `bossbar`
+
+- **Categoría:** mensajes_y_ui
+
+- **Identificador / Alias:** `BOSSBAR`
+- **Descripción:** Muestra una barra de jefe personalizada en la parte superior.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: BOSSBAR
+ title: "<gold>Tiempo restante"
+    progress: 1.0
+    color: PURPLE
+```
+
+---
+

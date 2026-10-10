@@ -1,0 +1,15 @@
+# `shield_break`
+
+- **Categoría:** nuevos_efectos_extendidos_de_combate_y_estrategia
+
+- **Identificador / Alias:** `SHIELD_BREAK`
+- **Descripción:** Desactiva el escudo del oponente y lo deja en tiempo de recarga si estaba bloqueando.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: SHIELD_BREAK
+```
+
+---
+

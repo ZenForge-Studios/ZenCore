@@ -1,0 +1,16 @@
+# `set_block`
+
+- **Categoría:** mundo_y_bloques
+
+- **Identificador / Alias:** `SET_BLOCK / PLACE_BLOCK`
+- **Descripción:** Cambia el bloque en la posición por otro material.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: SET_BLOCK
+    material: COBWEB
+```
+
+---
+

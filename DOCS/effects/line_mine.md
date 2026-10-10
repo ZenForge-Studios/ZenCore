@@ -1,0 +1,16 @@
+# `line_mine`
+
+- **Categoría:** nuevos_efectos_de_minera_agricultura_y_entorno
+
+- **Identificador / Alias:** `LINE_MINE`
+- **Descripción:** Mina un túnel o línea recta en la dirección a la que apunta el jugador.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: LINE_MINE
+    depth: 6
+```
+
+---
+

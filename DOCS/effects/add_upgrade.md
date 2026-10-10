@@ -1,0 +1,15 @@
+# `add_upgrade`
+
+- **Categoría:** estado_del_tem
+
+- **Identificador / Alias:** `ADD_UPGRADE`
+- **Descripción:** Aumenta en +1 el nivel de mejora del ítem invocando el motor de upgrades.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: ADD_UPGRADE
+```
+
+---
+

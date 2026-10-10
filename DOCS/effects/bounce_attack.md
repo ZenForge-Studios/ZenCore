@@ -1,0 +1,18 @@
+# `bounce_attack`
+
+- **Categoría:** nuevos_efectos_extendidos_de_combate_y_estrategia
+
+- **Identificador / Alias:** `BOUNCE_ATTACK`
+- **Descripción:** El ataque rebota sucesivamente entre múltiples enemigos cercanos.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: BOUNCE_ATTACK
+    bounces: 4
+    radius: 6.0
+    damage: 5.0
+```
+
+---
+

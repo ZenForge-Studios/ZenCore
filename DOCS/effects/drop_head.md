@@ -1,0 +1,15 @@
+# `drop_head`
+
+- **Categoría:** nuevos_efectos_de_entidad_auras_y_utilidad
+
+- **Identificador / Alias:** `DROP_HEAD`
+- **Descripción:** Hace que la criatura derrotada suelte su cabeza.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: DROP_HEAD
+```
+
+---
+

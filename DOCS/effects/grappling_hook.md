@@ -1,0 +1,16 @@
+# `grappling_hook`
+
+- **Categoría:** nuevos_efectos_de_movilidad_y_parkour
+
+- **Identificador / Alias:** `GRAPPLING_HOOK`
+- **Descripción:** Propulsa al jugador a toda velocidad hacia la ubicación o bloque seleccionado.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: GRAPPLING_HOOK
+    speed: 2.0
+```
+
+---
+

@@ -1,0 +1,16 @@
+# `taunt`
+
+- **Categoría:** nuevos_efectos_de_entidad_auras_y_utilidad
+
+- **Identificador / Alias:** `TAUNT`
+- **Descripción:** Provoca a todos los monstruos en el radio para que ataquen al jugador.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: TAUNT
+    radius: 15.0
+```
+
+---
+

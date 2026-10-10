@@ -1,0 +1,17 @@
+# `spawn_particle_ring`
+
+- **Categoría:** nuevos_efectos_de_entidad_auras_y_utilidad
+
+- **Identificador / Alias:** `SPAWN_PARTICLE_RING`
+- **Descripción:** Genera un anillo circular de partículas decorativas o de advertencia.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: SPAWN_PARTICLE_RING
+    radius: 3.5
+    count: 32
+```
+
+---
+

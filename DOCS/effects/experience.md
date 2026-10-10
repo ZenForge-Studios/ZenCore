@@ -1,0 +1,16 @@
+# `experience`
+
+- **Categoría:** jugador_y_vida
+
+- **Identificador / Alias:** `EXPERIENCE`
+- **Descripción:** Entrega puntos de experiencia planos al jugador.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: EXPERIENCE
+    amount: 50
+```
+
+---
+

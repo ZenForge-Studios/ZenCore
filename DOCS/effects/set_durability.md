@@ -1,0 +1,16 @@
+# `set_durability`
+
+- **Categoría:** estado_del_tem
+
+- **Identificador / Alias:** `SET_DURABILITY`
+- **Descripción:** Modifica directamente la durabilidad actual del ítem.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: SET_DURABILITY
+    durability: 500
+```
+
+---
+

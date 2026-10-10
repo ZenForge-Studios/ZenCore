@@ -1,0 +1,17 @@
+# `damage`
+
+- **Categoría:** jugador_y_vida
+
+- **Identificador / Alias:** `DAMAGE / DAMAGE_ENTITY`
+- **Descripción:** Aplica daño a la entidad objetivo o al portador.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: DAMAGE
+    target: TARGET # TARGET o SELF
+    amount: 6.0 # 3 corazones de daño
+```
+
+---
+

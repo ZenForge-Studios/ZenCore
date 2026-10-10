@@ -1,0 +1,15 @@
+# `mutate_drops`
+
+- **Categoría:** inventario
+
+- **Identificador / Alias:** `MUTATE_DROPS`
+- **Descripción:** Multiplica o altera los ítems generados al romper un bloque.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+  - type: MUTATE_DROPS
+```
+
+---
+

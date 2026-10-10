@@ -1,0 +1,16 @@
+# `food`
+
+- **Categoría:** jugador_y_vida
+
+- **Identificador / Alias:** `FOOD`
+- **Descripción:** Incrementa o disminuye el nivel de comida/hambre del jugador.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: FOOD
+    amount: 4
+```
+
+---
+

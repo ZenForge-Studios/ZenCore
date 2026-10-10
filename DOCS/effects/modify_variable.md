@@ -1,0 +1,15 @@
+# `modify_variable`
+
+- **Categoría:** estado_del_tem
+
+- **Identificador / Alias:** `MODIFY_VARIABLE`
+- **Descripción:** Permite operaciones de `INCREMENT`, `DECREMENT` o `SET` sobre variables.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+  - type: MODIFY_VARIABLE
+```
+
+---
+

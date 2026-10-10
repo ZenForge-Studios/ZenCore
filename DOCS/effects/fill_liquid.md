@@ -1,0 +1,16 @@
+# `fill_liquid`
+
+- **Categoría:** nuevos_efectos_de_minera_agricultura_y_entorno
+
+- **Identificador / Alias:** `FILL_LIQUID / DRAIN_LIQUID`
+- **Descripción:** Llena o drena fluidos (agua o lava) en un radio especificado.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: DRAIN_LIQUID
+    radius: 4
+```
+
+---
+

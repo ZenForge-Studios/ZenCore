@@ -1,0 +1,16 @@
+# `explosive_mining`
+
+- **Categoría:** nuevos_efectos_de_minera_agricultura_y_entorno
+
+- **Identificador / Alias:** `EXPLOSIVE_MINING`
+- **Descripción:** Detona y mina en área esférica sin romper bloques irrompibles como la bedrock.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: EXPLOSIVE_MINING
+    radius: 2
+```
+
+---
+

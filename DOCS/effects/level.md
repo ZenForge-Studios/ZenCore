@@ -1,0 +1,16 @@
+# `level`
+
+- **Categoría:** jugador_y_vida
+
+- **Identificador / Alias:** `LEVEL`
+- **Descripción:** Otorga niveles completos de experiencia.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: LEVEL
+    amount: 1
+```
+
+---
+

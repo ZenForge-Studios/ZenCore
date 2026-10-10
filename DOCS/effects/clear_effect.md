@@ -1,0 +1,16 @@
+# `clear_effect`
+
+- **Categoría:** jugador_y_vida
+
+- **Identificador / Alias:** `CLEAR_EFFECT`
+- **Descripción:** Elimina todos los efectos de poción activos en la entidad.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: CLEAR_EFFECT
+    target: SELF
+```
+
+---
+

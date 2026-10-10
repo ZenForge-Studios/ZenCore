@@ -1,0 +1,17 @@
+# `set_health`
+
+- **Categoría:** jugador_y_vida
+
+- **Identificador / Alias:** `SET_HEALTH`
+- **Descripción:** Establece la salud de la entidad en un valor exacto.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: SET_HEALTH
+    target: SELF
+    amount: 20.0
+```
+
+---
+

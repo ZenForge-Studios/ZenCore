@@ -1,0 +1,17 @@
+# `float`
+
+- **Categoría:** nuevos_efectos_de_movilidad_y_parkour
+
+- **Identificador / Alias:** `FLOAT / LEVITATE`
+- **Descripción:** Eleva por los aires a la entidad objetivo.
+
+### Ejemplo de Configuración
+```yaml
+effects:
+ - type: LEVITATE
+    duration: 80
+    amplifier: 1
+```
+
+---
+
