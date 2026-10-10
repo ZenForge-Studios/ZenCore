@@ -1,8 +1,11 @@
 package com.cuac_xd.zencore
 
 import com.cuac_xd.zencore.api.ZenCoreAPI
+import com.cuac_xd.zencore.aura.ZenAuraEngine
 import com.cuac_xd.zencore.engine.ZenEngine
+import com.cuac_xd.zencore.gui.ZenGUI
 import com.cuac_xd.zencore.integration.IntegrationHub
+import com.cuac_xd.zencore.trigger.ZenTriggerEngine
 import org.bukkit.plugin.java.JavaPlugin
 
 class ZenCorePlugin : JavaPlugin() {
@@ -12,11 +15,15 @@ class ZenCorePlugin : JavaPlugin() {
         companionInstance = this
         this.engine = ZenEngine()
 
-        // Initialize API
+        // Initialize API and Subsystems
         ZenCoreAPI.init(this)
 
         // Initialize Integrations (Vault, PlaceholderAPI)
         IntegrationHub.init()
+
+        // Register Core Event Listeners
+        server.pluginManager.registerEvents(ZenTriggerEngine, this)
+        server.pluginManager.registerEvents(ZenGUI.Companion, this)
 
         // Prune cooldowns periodically every 60s
         server.scheduler.runTaskTimer(this, Runnable {
@@ -27,6 +34,7 @@ class ZenCorePlugin : JavaPlugin() {
     }
 
     override fun onDisable() {
+        ZenAuraEngine.stopAll()
         logger.info("ZenCore disabled.")
     }
 

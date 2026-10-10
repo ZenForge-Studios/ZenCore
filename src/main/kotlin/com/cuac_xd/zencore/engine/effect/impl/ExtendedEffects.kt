@@ -244,5 +244,148 @@ object ExtendedEffects {
                 }
             }
         }
+
+        // BLACK_HOLE
+        registry.register("BLACK_HOLE") { ctx, args ->
+            val center = ContextResolver.resolveLocation(ctx, args["target"] as? String ?: "victim") ?: return@register
+            val world = center.world ?: return@register
+            val p = ctx.player
+            val radius = ContextResolver.getDouble(args, "radius", 8.0)
+            val pullPower = ContextResolver.getDouble(args, "pull_power", 1.2)
+            world.spawnParticle(Particle.PORTAL, center.clone().add(0.0, 1.0, 0.0), 80, 0.8, 0.8, 0.8, 0.2)
+            world.playSound(center, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.5f)
+            for (nearby in world.getNearbyLivingEntities(center, radius)) {
+                if (nearby == p) continue
+                val pull = center.toVector().subtract(nearby.location.toVector()).normalize().multiply(pullPower)
+                pull.setY(0.25)
+                nearby.velocity = pull
+            }
+        }
+
+        // WEB_SHOT
+        registry.register("WEB_SHOT") { ctx, args ->
+            val target = ContextResolver.resolveLivingTarget(ctx, args["target"] as? String ?: "victim") ?: return@register
+            val feet = target.location.block
+            if (feet.type.isAir || feet.isPassable) {
+                feet.type = Material.COBWEB
+                val ticks = ContextResolver.getInt(args, "ticks", ContextResolver.getInt(args, "duration", 5) * 20)
+                val plugin = org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(ExtendedEffects::class.java)
+                Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                    if (feet.type == Material.COBWEB) feet.type = Material.AIR
+                }, ticks.toLong())
+            }
+            target.world.spawnParticle(Particle.ITEM_COBWEB, target.location.add(0.0, 0.5, 0.0), 20, 0.3, 0.3, 0.3, 0.05)
+            target.world.playSound(target.location, Sound.BLOCK_COBWEB_PLACE, 1.0f, 1.0f)
+        }
+
+        // ENDER_BOW
+        registry.register("ENDER_BOW") { ctx, args ->
+            val shooter = ctx.player ?: return@register
+            val dest = ContextResolver.resolveLocation(ctx, args["target"] as? String ?: "victim") ?: return@register
+            shooter.teleport(dest.clone().add(0.0, 0.2, 0.0))
+            shooter.fallDistance = 0f
+            shooter.world.playSound(shooter.location, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f)
+            shooter.world.spawnParticle(Particle.PORTAL, shooter.location.add(0.0, 1.0, 0.0), 25, 0.5, 0.5, 0.5, 0.1)
+        }
+
+        // ENDERSHIFT
+        registry.register("ENDERSHIFT") { ctx, args ->
+            val player = ctx.player ?: return@register
+            val range = ContextResolver.getDouble(args, "range", 6.0)
+            val angle = Math.random() * 2 * Math.PI
+            val world = player.world
+            val safeLoc = player.location.clone().add(Math.cos(angle) * range, 0.0, Math.sin(angle) * range)
+            safeLoc.y = world.getHighestBlockYAt(safeLoc) + 1.0
+            player.teleport(safeLoc)
+            player.fallDistance = 0f
+            player.addPotionEffect(PotionEffect(PotionEffectType.RESISTANCE, 60, 2))
+            player.world.playSound(player.location, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.2f)
+            player.world.spawnParticle(Particle.PORTAL, player.location.add(0.0, 1.0, 0.0), 30, 0.4, 0.6, 0.4, 0.1)
+        }
+
+        // BLOOD_PACT
+        registry.register("BLOOD_PACT") { ctx, args ->
+            val player = ctx.player ?: return@register
+            val cost = ContextResolver.getInt(args, "exp_cost", 50)
+            if (player.totalExperience >= cost) {
+                player.giveExp(-cost)
+                ctx.damage = 0.0
+                ctx.cancelEvent()
+                player.health = kotlin.math.max(1.0, player.health)
+                player.world.playSound(player.location, Sound.ITEM_TOTEM_USE, 0.8f, 1.5f)
+                player.world.spawnParticle(Particle.DAMAGE_INDICATOR, player.location.add(0.0, 1.0, 0.0), 15, 0.3, 0.3, 0.3, 0.1)
+            }
+        }
+
+        // CURSE_CLUMSINESS
+        registry.register("CURSE_CLUMSINESS") { ctx, args ->
+            val player = ctx.player ?: return@register
+            ctx.damage = 0.0
+            ctx.cancelEvent()
+            val dropWeapon = ContextResolver.getBoolean(args, "drop_weapon", false)
+            val hand = player.inventory.itemInMainHand
+            if (dropWeapon && !hand.type.isAir) {
+                player.inventory.setItemInMainHand(null)
+                player.world.dropItemNaturally(player.location, hand)
+            }
+            player.world.playSound(player.location, Sound.ENTITY_ITEM_BREAK, 1.0f, 0.8f)
+        }
+
+        // CURSE_DECAY
+        registry.register("CURSE_DECAY") { ctx, args ->
+            val player = ctx.player ?: return@register
+            val duration = ContextResolver.getInt(args, "duration", 60)
+            val amplifier = ContextResolver.getInt(args, "amplifier", 0)
+            player.addPotionEffect(PotionEffect(PotionEffectType.WITHER, duration, amplifier))
+            player.world.spawnParticle(Particle.SMOKE, player.location.add(0.0, 1.0, 0.0), 10, 0.2, 0.4, 0.2, 0.02)
+        }
+
+        // BREAKING_POWER (Hypixel Skyblock Mining Stat modifier / metadata)
+        val breakingPowerEffect = ZenEffect { ctx, args ->
+            val player = ctx.player ?: return@ZenEffect
+            val amount = ContextResolver.getInt(args, "amount", ContextResolver.getInt(args, "value", 1))
+            val mode = (args["mode"] as? String)?.uppercase(Locale.ROOT) ?: "ADD" // SET or ADD
+            val current = (player.getMetadata("zen_breaking_power").firstOrNull()?.asInt()) ?: 0
+            val finalVal = if (mode == "SET") amount else current + amount
+            val plugin = org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(ExtendedEffects::class.java)
+            player.setMetadata("zen_breaking_power", org.bukkit.metadata.FixedMetadataValue(plugin, finalVal))
+            ctx.setVariable("breaking_power", finalVal)
+
+            val durationTicks = ContextResolver.getInt(args, "duration", 0)
+            if (durationTicks > 0) {
+                Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                    if (player.isOnline) {
+                        val now = (player.getMetadata("zen_breaking_power").firstOrNull()?.asInt()) ?: 0
+                        player.setMetadata("zen_breaking_power", org.bukkit.metadata.FixedMetadataValue(plugin, kotlin.math.max(0, now - amount)))
+                    }
+                }, durationTicks.toLong())
+            }
+        }
+        registry.register("BREAKING_POWER", breakingPowerEffect)
+        registry.register("GIVE_BREAKING_POWER", breakingPowerEffect)
+
+        // MINING_SPEED (Hypixel Skyblock Mining Stat modifier / metadata)
+        val miningSpeedEffect = ZenEffect { ctx, args ->
+            val player = ctx.player ?: return@ZenEffect
+            val amount = ContextResolver.getInt(args, "amount", ContextResolver.getInt(args, "value", 50))
+            val mode = (args["mode"] as? String)?.uppercase(Locale.ROOT) ?: "ADD"
+            val current = (player.getMetadata("zen_mining_speed").firstOrNull()?.asInt()) ?: 0
+            val finalVal = if (mode == "SET") amount else current + amount
+            val plugin = org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(ExtendedEffects::class.java)
+            player.setMetadata("zen_mining_speed", org.bukkit.metadata.FixedMetadataValue(plugin, finalVal))
+            ctx.setVariable("mining_speed", finalVal)
+
+            val durationTicks = ContextResolver.getInt(args, "duration", 0)
+            if (durationTicks > 0) {
+                Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                    if (player.isOnline) {
+                        val now = (player.getMetadata("zen_mining_speed").firstOrNull()?.asInt()) ?: 0
+                        player.setMetadata("zen_mining_speed", org.bukkit.metadata.FixedMetadataValue(plugin, kotlin.math.max(0, now - amount)))
+                    }
+                }, durationTicks.toLong())
+            }
+        }
+        registry.register("MINING_SPEED", miningSpeedEffect)
+        registry.register("GIVE_MINING_SPEED", miningSpeedEffect)
     }
 }

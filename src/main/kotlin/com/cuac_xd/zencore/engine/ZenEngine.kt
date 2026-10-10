@@ -4,6 +4,7 @@ import com.cuac_xd.zencore.engine.condition.ConditionRegistry
 import com.cuac_xd.zencore.engine.condition.impl.CoreConditions
 import com.cuac_xd.zencore.engine.context.ContextResolver
 import com.cuac_xd.zencore.engine.context.ZenExecutionContext
+import com.cuac_xd.zencore.engine.context.ZenPDC
 import com.cuac_xd.zencore.engine.effect.EffectRegistry
 import com.cuac_xd.zencore.engine.effect.impl.CoreEffects
 import com.cuac_xd.zencore.engine.effect.impl.ExtendedEffects
@@ -11,10 +12,17 @@ import com.cuac_xd.zencore.engine.filter.FilterRegistry
 import com.cuac_xd.zencore.engine.filter.impl.CoreFilters
 import com.cuac_xd.zencore.engine.mutator.MutatorRegistry
 import com.cuac_xd.zencore.engine.mutator.impl.CoreMutators
+import com.cuac_xd.zencore.integration.IntegrationHub
+import com.cuac_xd.zencore.util.AdventureUtil
+import com.cuac_xd.zencore.util.MathEvaluator
+import org.bukkit.Bukkit
 import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
+import org.bukkit.entity.Player
+import org.bukkit.plugin.Plugin
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 open class ZenEngine {
     val conditionRegistry = ConditionRegistry()
@@ -23,6 +31,7 @@ open class ZenEngine {
     val mutatorRegistry = MutatorRegistry()
 
     private val cooldowns = ConcurrentHashMap<String, Long>()
+    private val executionCounters = ConcurrentHashMap<String, AtomicInteger>()
     private val internalDamage = ThreadLocal.withInitial { false }
 
     init {
@@ -37,20 +46,44 @@ open class ZenEngine {
         ExtendedEffects.registerAll(effectRegistry)
     }
 
+    /**
+     * Evaluates conditions supporting top-level and nested logical trees ('and', 'or', 'not', 'inverted').
+     */
     fun testConditions(context: ZenExecutionContext, conditionConfigs: List<Map<String, Any>>?): Boolean {
         if (conditionConfigs.isNullOrEmpty()) return true
         for (condMap in conditionConfigs) {
-            val condId = (condMap["id"] ?: condMap["type"]) as? String ?: continue
-            val cond = conditionRegistry.get(condId) ?: continue
-            @Suppress("UNCHECKED_CAST")
-            val args = (condMap["args"] ?: condMap["parameters"] ?: emptyMap<String, Any>()) as Map<String, Any>
-            val result = cond.test(context, args)
-            val isNot = (condMap["not"] ?: condMap["inverted"] ?: false) as? Boolean ?: false
-            if (if (isNot) result else !result) {
+            if (!testSingleCondition(context, condMap)) {
                 return false
             }
         }
         return true
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun testSingleCondition(context: ZenExecutionContext, condMap: Map<String, Any>): Boolean {
+        // 1. Nested OR block
+        val orBlock = condMap["or"] as? List<Map<String, Any>>
+        if (orBlock != null) {
+            val pass = orBlock.any { testSingleCondition(context, it) }
+            val isNot = (condMap["not"] ?: condMap["inverted"] ?: false) as? Boolean ?: false
+            return if (isNot) !pass else pass
+        }
+
+        // 2. Nested AND block
+        val andBlock = condMap["and"] as? List<Map<String, Any>>
+        if (andBlock != null) {
+            val pass = andBlock.all { testSingleCondition(context, it) }
+            val isNot = (condMap["not"] ?: condMap["inverted"] ?: false) as? Boolean ?: false
+            return if (isNot) !pass else pass
+        }
+
+        // 3. Regular condition
+        val condId = (condMap["id"] ?: condMap["type"]) as? String ?: return true
+        val cond = conditionRegistry.get(condId) ?: return true
+        val args = (condMap["args"] ?: condMap["parameters"] ?: emptyMap<String, Any>()) as Map<String, Any>
+        val result = cond.test(context, args)
+        val isNot = (condMap["not"] ?: condMap["inverted"] ?: false) as? Boolean ?: false
+        return if (isNot) !result else result
     }
 
     fun testFilters(context: ZenExecutionContext, filterConfigs: List<Map<String, Any>>?): Boolean {
@@ -68,8 +101,81 @@ open class ZenEngine {
         }
     }
 
-    fun executeEffect(effectId: String, context: ZenExecutionContext, rawArgs: Map<String, Any>) {
+    /**
+     * Executes an effect supporting Libreforge optional arguments:
+     * - chance: Percentage chance of activating (supports math expression)
+     * - cost: Vault economy monetary cost
+     * - every: Activates only every X triggers
+     * - require: Logical/math expression that must evaluate > 0 to run
+     * - delay: Ticks to wait before running
+     * - repeat: Repeated execution (times, start, increment)
+     * - cooldown & cooldown_group & cooldown_message
+     */
+    fun executeEffect(effectId: String, context: ZenExecutionContext, rawArgs: Map<String, Any>, plugin: Plugin? = null) {
         val effect = effectRegistry.get(effectId) ?: return
+
+        val player = context.player
+
+        // 1. CHANCE CHECK
+        val chanceRaw = rawArgs["chance"]
+        if (chanceRaw != null) {
+            val chanceStr = ContextResolver.resolvePlaceholders(chanceRaw.toString(), context)
+            val chanceVal = MathEvaluator.eval(chanceStr)
+            if (chanceVal < 100.0) {
+                val rolled = Math.random() * 100.0
+                if (rolled >= chanceVal) return
+            }
+        }
+
+        // 2. REQUIRE CHECK
+        val requireRaw = rawArgs["require"] as? String
+        if (requireRaw != null) {
+            val reqResolved = ContextResolver.resolvePlaceholders(requireRaw, context)
+            val reqResult = MathEvaluator.eval(reqResolved)
+            if (reqResult <= 0.0) return
+        }
+
+        // 3. EVERY X COUNTER
+        val everyRaw = (rawArgs["every"] as? Number)?.toInt()
+        if (everyRaw != null && everyRaw > 1 && player != null) {
+            val counterKey = "${player.uniqueId}:$effectId"
+            val counter = executionCounters.computeIfAbsent(counterKey) { AtomicInteger(0) }
+            val current = counter.incrementAndGet()
+            if (current % everyRaw != 0) return
+        }
+
+        // 4. COOLDOWN CHECK
+        val cdRaw = (rawArgs["cooldown"] as? Number)?.toDouble() ?: 0.0
+        val cdGroup = (rawArgs["cooldown_group"] as? String) ?: effectId
+        if (cdRaw > 0.0 && player != null) {
+            val cdKey = "${player.uniqueId}:$cdGroup"
+            if (!checkAndSetCooldown(cdKey, cdRaw, player)) {
+                val sendMsg = (rawArgs["send_cooldown_message"] as? Boolean) ?: true
+                if (sendMsg) {
+                    val remaining = String.format("%.1f", getRemainingCooldown(cdKey, player))
+                    val defaultMsg = "<red>¡Esta habilidad está en enfriamiento! Espera <yellow>${remaining}s</yellow>.</red>"
+                    val customMsg = (rawArgs["cooldown_message"] as? String)?.replace("%seconds%", remaining) ?: defaultMsg
+                    AdventureUtil.sendMessage(player, customMsg)
+                }
+                return
+            }
+        }
+
+        // 5. VAULT COST CHECK
+        val costRaw = rawArgs["cost"]
+        if (costRaw != null && player != null && IntegrationHub.isVaultAvailable()) {
+            val costStr = ContextResolver.resolvePlaceholders(costRaw.toString(), context)
+            val costVal = MathEvaluator.eval(costStr)
+            if (costVal > 0.0) {
+                if (!IntegrationHub.hasMoney(player, costVal)) {
+                    AdventureUtil.sendMessage(player, "<red>No tienes suficiente dinero. Requiere <yellow>$costVal</yellow>.</red>")
+                    return
+                }
+                IntegrationHub.withdrawMoney(player, costVal)
+            }
+        }
+
+        // 6. RESOLVE RUNTIME ARGS
         val resolved = mutableMapOf<String, Any>()
         for ((k, v) in rawArgs) {
             if (v is String) {
@@ -78,21 +184,77 @@ open class ZenEngine {
                 resolved[k] = v
             }
         }
-        effect.execute(context, resolved)
+
+        // 7. EXECUTION DISPATCH (DELAY / REPEAT / DIRECT)
+        val delayTicks = (rawArgs["delay"] as? Number)?.toLong() ?: 0L
+        @Suppress("UNCHECKED_CAST")
+        val repeatCfg = rawArgs["repeat"] as? Map<String, Any>
+
+        val pl = plugin ?: (runCatching { Bukkit.getPluginManager().getPlugin("ZenCore") }.getOrNull())
+
+        if (repeatCfg != null && pl != null) {
+            val times = (repeatCfg["times"] as? Number)?.toInt() ?: 1
+            val start = (repeatCfg["start"] as? Number)?.toDouble() ?: 0.0
+            val increment = (repeatCfg["increment"] as? Number)?.toDouble() ?: 1.0
+
+            var count = 0
+            val period = (if (delayTicks > 0L) delayTicks else 20L)
+            Bukkit.getScheduler().runTaskTimer(pl, { task ->
+                if (count >= times || (player != null && !player.isOnline)) {
+                    task.cancel()
+                    return@runTaskTimer
+                }
+                val currentRepeatVal = start + (count * increment)
+                val repeatContextMap = resolved.toMutableMap()
+                repeatContextMap["repeat_count"] = currentRepeatVal
+                context.data["repeat_count"] = currentRepeatVal
+                effect.execute(context, repeatContextMap)
+                count++
+            }, delayTicks, period)
+            return
+        }
+
+        if (delayTicks > 0L && pl != null) {
+            Bukkit.getScheduler().runTaskLater(pl, Runnable {
+                effect.execute(context, resolved)
+            }, delayTicks)
+        } else {
+            effect.execute(context, resolved)
+        }
     }
 
-    fun checkAndSetCooldown(key: String, cooldownSeconds: Double): Boolean {
+    /**
+     * Checks cooldown using in-memory cache and PDC persistence for long cooldowns (> 30 seconds).
+     */
+    fun checkAndSetCooldown(key: String, cooldownSeconds: Double, holder: Player? = null): Boolean {
         if (cooldownSeconds <= 0.0) return true
         val now = System.currentTimeMillis()
+
+        // Check PDC if available
+        if (holder != null && cooldownSeconds >= 30.0) {
+            val pdcExpire = ZenPDC.getLong(holder, "cd_$key", 0L)
+            if (now < pdcExpire) return false
+        }
+
         val expire = cooldowns[key] ?: 0L
         if (now < expire) return false
-        cooldowns[key] = now + (cooldownSeconds * 1000.0).toLong()
+
+        val newExpire = now + (cooldownSeconds * 1000.0).toLong()
+        cooldowns[key] = newExpire
+
+        if (holder != null && cooldownSeconds >= 30.0) {
+            ZenPDC.setLong(holder, "cd_$key", newExpire)
+        }
         return true
     }
 
-    fun getRemainingCooldown(key: String): Double {
+    fun getRemainingCooldown(key: String, holder: Player? = null): Double {
         val now = System.currentTimeMillis()
-        val expire = cooldowns[key] ?: 0L
+        var expire = cooldowns[key] ?: 0L
+        if (holder != null) {
+            val pdcExpire = ZenPDC.getLong(holder, "cd_$key", 0L)
+            if (pdcExpire > expire) expire = pdcExpire
+        }
         if (now >= expire) return 0.0
         return (expire - now) / 1000.0
     }
@@ -100,6 +262,7 @@ open class ZenEngine {
     fun clearCooldowns(uuid: UUID) {
         val prefix = "$uuid:"
         cooldowns.entries.removeIf { it.key.startsWith(prefix) }
+        executionCounters.entries.removeIf { it.key.startsWith(prefix) }
     }
 
     fun pruneExpiredCooldowns() {
