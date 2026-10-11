@@ -1,13 +1,15 @@
 package com.cuac_xd.zencore.notify
 
 import com.cuac_xd.zencore.util.AdventureUtil
-import com.cuac_xd.zencore.util.MinecraftAdapter
+import org.bukkit.NamespacedKey
 import org.bukkit.Particle
+import org.bukkit.Registry
 import org.bukkit.Sound
 import org.bukkit.entity.Player
+import java.util.Locale
 
 /**
- * High-impact synchronized player notification system (Chat + Title + Sound + Particle).
+ * Synchronized player notification system (Chat + Title + Sound + Particle).
  */
 object ZenNotification {
 
@@ -31,14 +33,16 @@ object ZenNotification {
         }
 
         if (!soundName.isNullOrBlank()) {
-            val sound = MinecraftAdapter.resolveSound(soundName)
+            val clean = soundName.trim().lowercase(Locale.ROOT).replace("minecraft:", "").replace("_", ".")
+            val sound = runCatching { Registry.SOUNDS.get(NamespacedKey.minecraft(clean)) }.getOrNull()
             if (sound != null) {
                 player.playSound(player.location, sound, volume, pitch)
             }
         }
 
         if (!particleName.isNullOrBlank()) {
-            val particle = MinecraftAdapter.resolveParticle(particleName)
+            val clean = particleName.trim().uppercase(Locale.ROOT).replace("MINECRAFT:", "")
+            val particle = runCatching { Particle.valueOf(clean) }.getOrNull()
             if (particle != null) {
                 player.world.spawnParticle(particle, player.location.add(0.0, 1.0, 0.0), 10, 0.3, 0.5, 0.3, 0.05)
             }

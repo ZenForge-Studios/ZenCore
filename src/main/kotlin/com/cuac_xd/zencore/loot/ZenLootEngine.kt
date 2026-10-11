@@ -1,6 +1,5 @@
 package com.cuac_xd.zencore.loot
 
-import com.cuac_xd.zencore.util.MinecraftAdapter
 import org.bukkit.Location
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
