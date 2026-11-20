@@ -16,6 +16,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.10")
+    implementation("com.zaxxer:HikariCP:5.1.0")
 
     // Optional integrations
     compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
@@ -55,6 +56,15 @@ publishing {
             artifactId = "zencore"
             version = "1.0.0"
         }
+    }
+}
+
+tasks.processResources {
+    val props = mapOf("version" to version)
+    inputs.properties(props)
+    filteringCharset = "UTF-8"
+    filesMatching(listOf("plugin.yml", "paper-plugin.yml")) {
+        expand(props)
     }
 }
 

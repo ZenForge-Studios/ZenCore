@@ -2,10 +2,13 @@ package com.cuac_xd.zencore
 
 import com.cuac_xd.zencore.api.ZenCoreAPI
 import com.cuac_xd.zencore.aura.ZenAuraEngine
+import com.cuac_xd.zencore.booster.ZenBoosterEngine
 import com.cuac_xd.zencore.engine.ZenEngine
 import com.cuac_xd.zencore.gui.ZenGUI
 import com.cuac_xd.zencore.integration.IntegrationHub
+import com.cuac_xd.zencore.stat.ZenStatEngine
 import com.cuac_xd.zencore.trigger.ZenTriggerEngine
+import com.cuac_xd.zencore.world.ZenBlockTracker
 import org.bukkit.plugin.java.JavaPlugin
 
 class ZenCorePlugin : JavaPlugin() {
@@ -24,10 +27,14 @@ class ZenCorePlugin : JavaPlugin() {
         // Register Core Event Listeners
         server.pluginManager.registerEvents(ZenTriggerEngine, this)
         server.pluginManager.registerEvents(ZenGUI.Companion, this)
+        server.pluginManager.registerEvents(com.cuac_xd.zencore.gui.ZenMenu.Companion, this)
+        server.pluginManager.registerEvents(ZenBlockTracker, this)
 
-        // Prune cooldowns periodically every 60s
+        // Prune cooldowns, boosters, and stats periodically every 60s
         server.scheduler.runTaskTimer(this, Runnable {
             engine.pruneExpiredCooldowns()
+            ZenBoosterEngine.pruneExpired()
+            ZenStatEngine.pruneExpired()
         }, 1200L, 1200L)
 
         logger.info("ZenCore v${pluginMeta.version} enabled successfully! (Written in Kotlin, Paper 1.21+)")

@@ -1,8 +1,13 @@
 package com.cuac_xd.zencore.engine.effect.impl
 
+import com.cuac_xd.zencore.booster.ZenBoosterEngine
 import com.cuac_xd.zencore.engine.context.ContextResolver
 import com.cuac_xd.zencore.engine.effect.EffectRegistry
 import com.cuac_xd.zencore.engine.effect.ZenEffect
+import com.cuac_xd.zencore.hooks.ZenHooksHub
+import com.cuac_xd.zencore.hooks.ZenPartyHook
+import com.cuac_xd.zencore.stat.StatOperation
+import com.cuac_xd.zencore.stat.ZenStatEngine
 import com.cuac_xd.zencore.util.AdventureUtil
 import com.cuac_xd.zencore.util.MathEvaluator
 import net.kyori.adventure.bossbar.BossBar
@@ -11,6 +16,7 @@ import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.Sound
+import org.bukkit.attribute.Attribute
 import org.bukkit.entity.Damageable
 import org.bukkit.entity.LivingEntity
 import org.bukkit.potion.PotionEffect
@@ -280,5 +286,280 @@ object CoreEffects {
             val cmd = args["command"] as? String ?: return@register
             p.performCommand(ContextResolver.resolvePlaceholders(cmd, ctx))
         }
+
+        // ==========================================
+        // ECOSYSTEM EFFECTS (ZenEconomy, ZenCosmetics, ZenCustomItems, ZenEnchants)
+        // ==========================================
+        val giveCurrency = ZenEffect { ctx, args ->
+            val p = ctx.player ?: return@ZenEffect
+            val currency = (args["currency"] ?: args["type"] ?: "vault").toString()
+            val amtStr = ContextResolver.resolvePlaceholders(args["amount"]?.toString() ?: "1", ctx)
+            val amt = MathEvaluator.eval(amtStr)
+            com.cuac_xd.zencore.hooks.ZenHooksHub.depositAny(p, currency, amt)
+        }
+        registry.register("GIVE_CURRENCY", giveCurrency)
+        registry.register("DEPOSIT_CURRENCY", giveCurrency)
+
+        val takeCurrency = ZenEffect { ctx, args ->
+            val p = ctx.player ?: return@ZenEffect
+            val currency = (args["currency"] ?: args["type"] ?: "vault").toString()
+            val amtStr = ContextResolver.resolvePlaceholders(args["amount"]?.toString() ?: "1", ctx)
+            val amt = MathEvaluator.eval(amtStr)
+            com.cuac_xd.zencore.hooks.ZenHooksHub.withdrawAny(p, currency, amt)
+        }
+        registry.register("TAKE_CURRENCY", takeCurrency)
+        registry.register("WITHDRAW_CURRENCY", takeCurrency)
+
+        registry.register("SET_CURRENCY") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val currency = (args["currency"] ?: args["type"] ?: "vault").toString()
+            val amtStr = ContextResolver.resolvePlaceholders(args["amount"]?.toString() ?: "0", ctx)
+            val amt = MathEvaluator.eval(amtStr)
+            com.cuac_xd.zencore.hooks.ZenEconomyHook.setBalance(p, currency, amt)
+        }
+
+        registry.register("UNLOCK_COSMETIC") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val id = (args["id"] ?: args["cosmetic"])?.toString() ?: return@register
+            com.cuac_xd.zencore.hooks.ZenCosmeticsHook.unlockCosmetic(p, id)
+        }
+
+        registry.register("LOCK_COSMETIC") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val id = (args["id"] ?: args["cosmetic"])?.toString() ?: return@register
+            com.cuac_xd.zencore.hooks.ZenCosmeticsHook.lockCosmetic(p, id)
+        }
+
+        registry.register("EQUIP_COSMETIC") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val id = (args["id"] ?: args["cosmetic"])?.toString() ?: return@register
+            com.cuac_xd.zencore.hooks.ZenCosmeticsHook.equipCosmetic(p, id)
+        }
+
+        registry.register("UNEQUIP_COSMETIC") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val category = (args["category"] ?: args["type"])?.toString() ?: return@register
+            com.cuac_xd.zencore.hooks.ZenCosmeticsHook.unequipCategory(p, category)
+        }
+
+        val giveCustomItem = ZenEffect { ctx, args ->
+            val p = ctx.player ?: return@ZenEffect
+            val id = (args["id"] ?: args["item"])?.toString() ?: return@ZenEffect
+            val amtStr = ContextResolver.resolvePlaceholders(args["amount"]?.toString() ?: "1", ctx)
+            val amt = MathEvaluator.eval(amtStr).toInt().coerceAtLeast(1)
+            com.cuac_xd.zencore.hooks.ZenCustomItemsHook.giveItem(p, id, amt)
+        }
+        registry.register("GIVE_CUSTOM_ITEM", giveCustomItem)
+        registry.register("GIVE_ZEN_ITEM", giveCustomItem)
+
+        registry.register("APPLY_ENCHANT") { ctx, args ->
+            val item = ctx.item ?: return@register
+            val id = (args["enchant"] ?: args["id"] ?: args["enchantment"])?.toString() ?: return@register
+            val lvlStr = ContextResolver.resolvePlaceholders(args["level"]?.toString() ?: "1", ctx)
+            val level = MathEvaluator.eval(lvlStr).toInt().coerceAtLeast(1)
+            com.cuac_xd.zencore.hooks.ZenEnchantsHook.applyEnchantment(item, id, level, ctx.player)
+        }
+
+        // ==========================================
+        // PARTY EFFECTS (ZenPartyHub / ZenPartyHook)
+        // ==========================================
+        val partyBroadcast = ZenEffect { ctx, args ->
+            val p = ctx.player ?: return@ZenEffect
+            val party = ZenPartyHook.getPartyByPlayer(p.uniqueId) ?: return@ZenEffect
+            val rawMsg = (args["message"] ?: args["text"])?.toString() ?: return@ZenEffect
+            val formatted = ContextResolver.resolvePlaceholders(rawMsg, ctx)
+            ZenPartyHook.broadcastToParty(party.id, formatted)
+        }
+        registry.register("PARTY_BROADCAST", partyBroadcast)
+        registry.register("PARTY_MESSAGE", partyBroadcast)
+
+        registry.register("PARTY_WARP") { ctx, _ ->
+            val p = ctx.player ?: return@register
+            val party = ZenPartyHook.getPartyByPlayer(p.uniqueId) ?: return@register
+            ZenPartyHook.warpPartyToLeader(party.id)
+        }
+
+        registry.register("PARTY_CONNECT_SERVER") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val party = ZenPartyHook.getPartyByPlayer(p.uniqueId) ?: return@register
+            val rawServer = (args["server"] ?: args["target_server"])?.toString() ?: return@register
+            val server = ContextResolver.resolvePlaceholders(rawServer, ctx)
+            if (server.isNotBlank()) {
+                ZenPartyHook.connectPartyToServer(party.id, server)
+            }
+        }
+
+        registry.register("PARTY_HEAL") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val amtStr = ContextResolver.resolvePlaceholders((args["amount"] ?: "4").toString(), ctx)
+            val heal = MathEvaluator.eval(amtStr)
+            if (heal <= 0.0) return@register
+            val radius = ContextResolver.getDouble(args, "radius", 20.0)
+            for (member in ZenPartyHook.getNearbyOnlineMembers(p, radius)) {
+                runCatching {
+                    if (!member.isDead) {
+                        val maxHp = runCatching { member.getAttribute(Attribute.MAX_HEALTH)?.value }.getOrNull()
+                            ?: runCatching { member.maxHealth }.getOrDefault(20.0)
+                        member.health = kotlin.math.min(maxHp, member.health + heal)
+                    }
+                }
+            }
+        }
+
+        registry.register("PARTY_POTION_EFFECT") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val effName = (args["effect"] ?: args["potion"])?.toString() ?: return@register
+            val type = runCatching {
+                PotionEffectType.getByName(effName.uppercase(Locale.ROOT).replace("MINECRAFT:", ""))
+            }.getOrNull() ?: return@register
+            val duration = ContextResolver.getInt(args, "duration", 100)
+            val amplifier = ContextResolver.getInt(args, "amplifier", 0)
+            val radius = ContextResolver.getDouble(args, "radius", 20.0)
+            for (member in ZenPartyHook.getNearbyOnlineMembers(p, radius)) {
+                runCatching { member.addPotionEffect(PotionEffect(type, duration, amplifier)) }
+            }
+        }
+
+        registry.register("PARTY_GIVE_CURRENCY") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val party = ZenPartyHook.getPartyByPlayer(p.uniqueId) ?: return@register
+            val currency = (args["currency"] ?: args["type"] ?: "vault").toString()
+            val amtStr = ContextResolver.resolvePlaceholders((args["amount"] ?: "1").toString(), ctx)
+            val amt = MathEvaluator.eval(amtStr)
+            val split = ContextResolver.getBoolean(args, "split", false)
+            ZenHooksHub.depositPartyAny(party.id, currency, amt, split)
+        }
+
+        registry.register("PARTY_GIVE_XP") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val amtStr = ContextResolver.resolvePlaceholders((args["amount"] ?: "10").toString(), ctx)
+            val amt = kotlin.math.round(MathEvaluator.eval(amtStr)).toInt()
+            if (amt == 0) return@register
+            val radius = ContextResolver.getDouble(args, "radius", 20.0)
+            for (member in ZenPartyHook.getNearbyOnlineMembers(p, radius)) {
+                runCatching { member.giveExp(amt) }
+            }
+        }
+
+        // ==========================================
+        // BOOSTER, STAT & RESOURCE EFFECTS
+        // ==========================================
+        registry.register("ACTIVATE_BOOSTER") { ctx, args ->
+            val explicitId = (args["id"] ?: args["booster"] ?: args["booster_id"])?.toString()
+                ?.let { ContextResolver.resolvePlaceholders(it, ctx) }
+            val bypassCooldown = ContextResolver.getBoolean(args, "bypass_cooldown", false)
+            val hasInlineStats = args.containsKey("multiplier") || args.containsKey("duration")
+            val p = ctx.player
+
+            if (explicitId != null && !hasInlineStats && p != null && ZenBoosterEngine.isAvailable()) {
+                if (ZenBoosterEngine.activateBooster(explicitId, p, bypassCooldown)) {
+                    return@register
+                }
+            }
+
+            val category = ContextResolver.resolvePlaceholders((args["category"] ?: "xp").toString(), ctx)
+            val id = explicitId ?: "booster_$category"
+            val mulStr = ContextResolver.resolvePlaceholders((args["multiplier"] ?: "1.5").toString(), ctx)
+            val multiplier = MathEvaluator.eval(mulStr)
+            val durStr = ContextResolver.resolvePlaceholders((args["duration"] ?: "60").toString(), ctx)
+            val durationSeconds = MathEvaluator.eval(durStr).toLong()
+            val global = ContextResolver.getBoolean(args, "global", false)
+            val shareWithParty = ContextResolver.getBoolean(args, "share_with_party", false)
+
+            if (global) {
+                ZenBoosterEngine.addGlobalBooster(id, category, multiplier, durationSeconds)
+            } else {
+                val target = p ?: return@register
+                ZenBoosterEngine.addPlayerBooster(target.uniqueId, id, category, multiplier, durationSeconds, shareWithParty)
+            }
+        }
+
+        val giveBoosterHandler = ZenEffect { ctx, args ->
+            val p = ctx.player ?: return@ZenEffect
+            val idRaw = (args["id"] ?: args["booster"] ?: args["booster_id"])?.toString() ?: return@ZenEffect
+            val boosterId = ContextResolver.resolvePlaceholders(idRaw, ctx)
+            val amountStr = ContextResolver.resolvePlaceholders((args["amount"] ?: "1").toString(), ctx)
+            val amount = MathEvaluator.eval(amountStr).toInt().coerceAtLeast(1)
+            if (!ZenBoosterEngine.giveBooster(p.uniqueId, boosterId, amount)) {
+                com.cuac_xd.zencore.hooks.ZenBoosterHook.giveBooster(p, boosterId, amount)
+            }
+        }
+        registry.register("GIVE_BOOSTER", giveBoosterHandler)
+        registry.register("GIVE_BOOSTER_VOUCHER", giveBoosterHandler)
+
+        val stopBoosterHandler = ZenEffect { ctx, args ->
+            val idRaw = (args["id"] ?: args["booster"] ?: args["booster_id"])?.toString() ?: return@ZenEffect
+            val boosterId = ContextResolver.resolvePlaceholders(idRaw, ctx)
+            val scope = args["scope"]?.toString()?.let { raw ->
+                val resolved = ContextResolver.resolvePlaceholders(raw, ctx).trim().uppercase(Locale.ROOT)
+                runCatching { com.cuac_xd.zencore.booster.ZenBoosterScope.valueOf(resolved) }.getOrNull()
+            }
+            val isGlobal = ContextResolver.getBoolean(args, "global", false)
+            val targetUuid = if (isGlobal || scope == com.cuac_xd.zencore.booster.ZenBoosterScope.GLOBAL) {
+                null
+            } else {
+                ctx.player?.uniqueId
+            }
+            ZenBoosterEngine.stopBooster(boosterId, scope, targetUuid)
+        }
+        registry.register("STOP_BOOSTER", stopBoosterHandler)
+        registry.register("REMOVE_BOOSTER", stopBoosterHandler)
+
+        registry.register("OPEN_BOOSTER_MENU") { ctx, _ ->
+            val p = ctx.player ?: return@register
+            ZenBoosterEngine.openMainMenu(p)
+        }
+
+        registry.register("OPEN_BOOSTER_VAULT") { ctx, _ ->
+            val p = ctx.player ?: return@register
+            ZenBoosterEngine.openVaultMenu(p)
+        }
+
+        registry.register("ADD_STAT_MODIFIER") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val stat = args["stat"]?.toString() ?: return@register
+            val key = ContextResolver.resolvePlaceholders((args["key"] ?: "effect_$stat").toString(), ctx)
+            val amtStr = ContextResolver.resolvePlaceholders((args["amount"] ?: args["value"] ?: "1.0").toString(), ctx)
+            val amount = MathEvaluator.eval(amtStr)
+            val opStr = (args["operation"] ?: "ADDITIVE").toString().uppercase(Locale.ROOT)
+            val operation = runCatching { StatOperation.valueOf(opStr) }.getOrDefault(StatOperation.ADDITIVE)
+            val durStr = ContextResolver.resolvePlaceholders((args["duration"] ?: "0").toString(), ctx)
+            val durationTicks = MathEvaluator.eval(durStr).toLong().coerceAtLeast(0L)
+
+            ZenStatEngine.addModifier(p.uniqueId, key, stat, amount, operation, durationTicks)
+            ZenStatEngine.syncBukkitAttribute(p, stat)
+        }
+
+        registry.register("REMOVE_STAT_MODIFIER") { ctx, args ->
+            val p = ctx.player ?: return@register
+            val keyRaw = args["key"]?.toString() ?: return@register
+            val key = ContextResolver.resolvePlaceholders(keyRaw, ctx)
+            val stat = args["stat"]?.toString()
+
+            ZenStatEngine.removeModifier(p.uniqueId, key, stat)
+            if (stat != null) {
+                ZenStatEngine.syncBukkitAttribute(p, stat)
+            }
+        }
+
+        val giveResource = ZenEffect { ctx, args ->
+            val p = ctx.player ?: return@ZenEffect
+            val pool = (args["pool"] ?: args["resource_pool"] ?: "mana").toString()
+            val amtStr = ContextResolver.resolvePlaceholders((args["amount"] ?: args["value"] ?: "10").toString(), ctx)
+            val amt = MathEvaluator.eval(amtStr)
+            ZenStatEngine.giveResource(p.uniqueId, pool, amt)
+        }
+        registry.register("GIVE_RESOURCE", giveResource)
+        registry.register("GIVE_MANA", giveResource)
+
+        val takeResource = ZenEffect { ctx, args ->
+            val p = ctx.player ?: return@ZenEffect
+            val pool = (args["pool"] ?: args["resource_pool"] ?: "mana").toString()
+            val amtStr = ContextResolver.resolvePlaceholders((args["amount"] ?: args["value"] ?: "10").toString(), ctx)
+            val amt = MathEvaluator.eval(amtStr)
+            ZenStatEngine.consumeResource(p.uniqueId, pool, amt)
+        }
+        registry.register("TAKE_RESOURCE", takeResource)
+        registry.register("TAKE_MANA", takeResource)
     }
 }

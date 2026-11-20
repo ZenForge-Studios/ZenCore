@@ -28,6 +28,7 @@ class ZenGUI(
 
     override fun getInventory(): Inventory = inventory
 
+    @JvmOverloads
     fun setItem(slot: Int, item: ItemStack, onClick: ((Player, InventoryClickEvent) -> Unit)? = null): ZenGUI {
         if (slot in 0 until size) {
             inventory.setItem(slot, item)

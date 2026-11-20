@@ -1,8 +1,13 @@
 package com.cuac_xd.zencore.engine.condition.impl
 
+import com.cuac_xd.zencore.booster.ZenBoosterEngine
 import com.cuac_xd.zencore.engine.condition.ConditionRegistry
+import com.cuac_xd.zencore.engine.condition.ZenCondition
 import com.cuac_xd.zencore.engine.context.ContextResolver
+import com.cuac_xd.zencore.party.ZenPartyHub
+import com.cuac_xd.zencore.stat.ZenStatEngine
 import com.cuac_xd.zencore.util.MathEvaluator
+import com.cuac_xd.zencore.world.ZenBlockTracker
 import org.bukkit.Material
 import org.bukkit.entity.Animals
 import org.bukkit.entity.Boss
@@ -210,6 +215,148 @@ object CoreConditions {
             val limit = ContextResolver.getDouble(args, "value", 0.0)
             val actual = (ctx.data[vName] as? Number)?.toDouble() ?: 0.0
             actual > limit
+        }
+
+        // ==========================================
+        // ECOSYSTEM CONDITIONS (ZenEconomy, ZenCosmetics, ZenCustomItems, ZenEnchants)
+        // ==========================================
+        val hasCurrency = com.cuac_xd.zencore.engine.condition.ZenCondition { ctx, args ->
+            val p = ctx.player ?: return@ZenCondition false
+            val currency = (args["currency"] ?: args["type"] ?: "vault").toString()
+            val amtStr = ContextResolver.resolvePlaceholders(args["amount"]?.toString() ?: "1", ctx)
+            val amt = MathEvaluator.eval(amtStr)
+            com.cuac_xd.zencore.hooks.ZenHooksHub.hasAny(p, currency, amt)
+        }
+        registry.register("HAS_CURRENCY", hasCurrency)
+        registry.register("HAS_MONEY", hasCurrency)
+
+        registry.register("HAS_COSMETIC") { ctx, args ->
+            val p = ctx.player ?: return@register false
+            val id = (args["id"] ?: args["cosmetic"])?.toString() ?: return@register false
+            com.cuac_xd.zencore.hooks.ZenCosmeticsHook.hasCosmetic(p, id)
+        }
+
+        registry.register("HAS_CUSTOM_ITEM") { ctx, args ->
+            val p = ctx.player ?: return@register false
+            val id = (args["id"] ?: args["item"])?.toString() ?: return@register false
+            val amtStr = ContextResolver.resolvePlaceholders(args["amount"]?.toString() ?: "1", ctx)
+            val amt = MathEvaluator.eval(amtStr).toInt().coerceAtLeast(1)
+            com.cuac_xd.zencore.hooks.ZenCustomItemsHook.hasItem(p, id, amt)
+        }
+
+        registry.register("HAS_ENCHANT") { ctx, args ->
+            val item = ctx.item ?: return@register false
+            val id = (args["enchant"] ?: args["id"] ?: args["enchantment"])?.toString() ?: return@register false
+            val minLevel = ContextResolver.getInt(args, "level", 1)
+            val actualLevel = com.cuac_xd.zencore.hooks.ZenEnchantsHook.getEnchantmentLevel(item, id)
+            actualLevel >= minLevel
+        }
+
+        // ==========================================
+        // PARTY CONDITIONS (ZenPartyHub)
+        // ==========================================
+        registry.register("IN_PARTY") { ctx, _ ->
+            val p = ctx.player ?: return@register false
+            ZenPartyHub.isInParty(p.uniqueId)
+        }
+
+        registry.register("IS_PARTY_LEADER") { ctx, _ ->
+            val p = ctx.player ?: return@register false
+            ZenPartyHub.isLeader(p.uniqueId)
+        }
+
+        registry.register("IS_PARTY_MODERATOR") { ctx, _ ->
+            val p = ctx.player ?: return@register false
+            ZenPartyHub.isModeratorOrLeader(p.uniqueId)
+        }
+
+        registry.register("SAME_PARTY") { ctx, _ ->
+            val p = ctx.player ?: return@register false
+            val targetPlayer = (ctx.targetEntity as? Player) ?: (ctx.target as? Player) ?: return@register false
+            ZenPartyHub.areInSameParty(p.uniqueId, targetPlayer.uniqueId)
+        }
+
+        registry.register("PARTY_SIZE_ABOVE") { ctx, args ->
+            val p = ctx.player ?: return@register false
+            val party = ZenPartyHub.getPartyByPlayer(p.uniqueId) ?: return@register false
+            val minSize = ContextResolver.getInt(args, "size", ContextResolver.getInt(args, "value", 1))
+            party.size >= minSize
+        }
+
+        registry.register("PARTY_SIZE_BELOW") { ctx, args ->
+            val p = ctx.player ?: return@register false
+            val party = ZenPartyHub.getPartyByPlayer(p.uniqueId) ?: return@register false
+            val maxSize = ContextResolver.getInt(args, "size", ContextResolver.getInt(args, "value", 2))
+            party.size < maxSize
+        }
+
+        registry.register("PARTY_SIZE_EQUALS") { ctx, args ->
+            val p = ctx.player ?: return@register false
+            val party = ZenPartyHub.getPartyByPlayer(p.uniqueId) ?: return@register false
+            val exactSize = ContextResolver.getInt(args, "size", ContextResolver.getInt(args, "value", 1))
+            party.size == exactSize
+        }
+
+        registry.register("NEARBY_PARTY_MEMBERS") { ctx, args ->
+            val p = ctx.player ?: return@register false
+            val minCount = ContextResolver.getInt(args, "count", ContextResolver.getInt(args, "value", 1))
+            val radius = ContextResolver.getDouble(args, "radius", 20.0)
+            ZenPartyHub.getNearbyOnlineMembers(p, radius).count { it.uniqueId != p.uniqueId } >= minCount
+        }
+
+        registry.register("PARTY_FRIENDLY_FIRE") { ctx, _ ->
+            val p = ctx.player ?: return@register false
+            val party = ZenPartyHub.getPartyByPlayer(p.uniqueId) ?: return@register false
+            party.friendlyFire
+        }
+
+        // ==========================================
+        // BOOSTER, STAT, RESOURCE & WORLD CONDITIONS
+        // ==========================================
+        registry.register("HAS_ACTIVE_BOOSTER") { ctx, args ->
+            val p = ctx.player ?: return@register false
+            val category = (args["category"] ?: args["value"])?.toString()
+            if (category.isNullOrBlank()) {
+                ZenBoosterEngine.getActiveBoosters(p.uniqueId).isNotEmpty()
+            } else {
+                ZenBoosterEngine.hasActiveBooster(p.uniqueId, category)
+            }
+        }
+
+        val statCheck = { ctx: com.cuac_xd.zencore.engine.context.ZenExecutionContext, args: Map<String, Any>, above: Boolean ->
+            val p = ctx.player
+            val stat = args["stat"]?.toString()
+            if (p == null || stat == null) {
+                false
+            } else {
+                val thresholdStr = ContextResolver.resolvePlaceholders((args["value"] ?: args["amount"] ?: "0").toString(), ctx)
+                val threshold = MathEvaluator.eval(thresholdStr)
+                val current = ZenStatEngine.getStat(p.uniqueId, stat)
+                if (above) current > threshold else current < threshold
+            }
+        }
+
+        registry.register("STAT_ABOVE") { ctx, args -> statCheck(ctx, args, true) }
+        registry.register("STAT_BELOW") { ctx, args -> statCheck(ctx, args, false) }
+
+        val hasResource = ZenCondition { ctx, args ->
+            val p = ctx.player ?: return@ZenCondition false
+            val pool = (args["pool"] ?: args["resource_pool"] ?: "mana").toString()
+            val amtStr = ContextResolver.resolvePlaceholders((args["amount"] ?: args["value"] ?: "1").toString(), ctx)
+            val amt = MathEvaluator.eval(amtStr)
+            ZenStatEngine.hasResource(p.uniqueId, pool, amt)
+        }
+        registry.register("HAS_RESOURCE", hasResource)
+        registry.register("HAS_MANA", hasResource)
+
+        registry.register("IS_PLAYER_PLACED") { ctx, _ ->
+            val b = ctx.block ?: return@register false
+            ZenBlockTracker.isPlayerPlaced(b)
+        }
+
+        registry.register("NOT_PLAYER_PLACED") { ctx, _ ->
+            val b = ctx.block ?: return@register false
+            !ZenBlockTracker.isPlayerPlaced(b)
         }
     }
 }

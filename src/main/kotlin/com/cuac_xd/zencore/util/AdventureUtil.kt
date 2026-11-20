@@ -1,6 +1,7 @@
 package com.cuac_xd.zencore.util
 
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.kyori.adventure.title.Title
@@ -26,18 +27,19 @@ object AdventureUtil {
     @JvmStatic
     fun parse(text: String?): Component {
         if (text.isNullOrEmpty()) return Component.empty()
-        if (text.contains("<") && text.contains(">")) {
-            try {
-                return miniMessage.deserialize(text)
-            } catch (_: Exception) {}
+        val comp = when {
+            text.contains("<") && text.contains(">") -> {
+                try {
+                    miniMessage.deserialize(text)
+                } catch (_: Exception) {
+                    Component.text(text)
+                }
+            }
+            text.contains("&") -> ampersandSerializer.deserialize(text)
+            text.contains("§") -> sectionSerializer.deserialize(text)
+            else -> Component.text(text)
         }
-        if (text.contains("&")) {
-            return ampersandSerializer.deserialize(text)
-        }
-        if (text.contains("§")) {
-            return sectionSerializer.deserialize(text)
-        }
-        return Component.text(text)
+        return comp.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE)
     }
 
     @JvmStatic

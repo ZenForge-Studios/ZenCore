@@ -2,6 +2,8 @@ package com.cuac_xd.zencore.engine.filter.impl
 
 import com.cuac_xd.zencore.engine.context.ContextResolver
 import com.cuac_xd.zencore.engine.filter.FilterRegistry
+import com.cuac_xd.zencore.party.ZenPartyHub
+import com.cuac_xd.zencore.world.ZenBlockTracker
 import org.bukkit.entity.Player
 
 object CoreFilters {
@@ -69,6 +71,35 @@ object CoreFilters {
             val p = ctx.player ?: return@register false
             val gm = args["gamemode"] as? String
             gm != null && p.gameMode.name.equals(gm, ignoreCase = true)
+        }
+
+        // PARTY FILTERS
+        registry.register("IN_PARTY") { ctx, _ ->
+            val p = ctx.player ?: return@register false
+            ZenPartyHub.isInParty(p.uniqueId)
+        }
+
+        registry.register("SAME_PARTY") { ctx, _ ->
+            val p = ctx.player ?: return@register false
+            val targetPlayer = (ctx.targetEntity as? Player) ?: (ctx.target as? Player) ?: return@register false
+            ZenPartyHub.areInSameParty(p.uniqueId, targetPlayer.uniqueId)
+        }
+
+        registry.register("NOT_SAME_PARTY") { ctx, _ ->
+            val p = ctx.player ?: return@register true
+            val targetPlayer = (ctx.targetEntity as? Player) ?: (ctx.target as? Player) ?: return@register true
+            !ZenPartyHub.areInSameParty(p.uniqueId, targetPlayer.uniqueId)
+        }
+
+        // WORLD / BLOCK TRACKING FILTERS
+        registry.register("IS_PLAYER_PLACED") { ctx, _ ->
+            val block = ctx.block ?: return@register false
+            ZenBlockTracker.isPlayerPlaced(block)
+        }
+
+        registry.register("NOT_PLAYER_PLACED") { ctx, _ ->
+            val block = ctx.block ?: return@register false
+            !ZenBlockTracker.isPlayerPlaced(block)
         }
     }
 }

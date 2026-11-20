@@ -12,7 +12,8 @@ import com.cuac_xd.zencore.engine.filter.FilterRegistry
 import com.cuac_xd.zencore.engine.filter.impl.CoreFilters
 import com.cuac_xd.zencore.engine.mutator.MutatorRegistry
 import com.cuac_xd.zencore.engine.mutator.impl.CoreMutators
-import com.cuac_xd.zencore.integration.IntegrationHub
+import com.cuac_xd.zencore.hooks.ZenHooksHub
+import com.cuac_xd.zencore.stat.ZenStatEngine
 import com.cuac_xd.zencore.util.AdventureUtil
 import com.cuac_xd.zencore.util.MathEvaluator
 import org.bukkit.Bukkit
@@ -20,6 +21,7 @@ import org.bukkit.entity.Entity
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
+import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -44,6 +46,8 @@ open class ZenEngine {
         CoreConditions.registerAll(conditionRegistry)
         CoreEffects.registerAll(effectRegistry)
         ExtendedEffects.registerAll(effectRegistry)
+        ZenTagsEngineSupport.registerConditions(conditionRegistry)
+        ZenTagsEngineSupport.registerEffects(effectRegistry)
     }
 
     /**
@@ -101,15 +105,23 @@ open class ZenEngine {
         }
     }
 
+    private fun evalArgDouble(raw: Any?, context: ZenExecutionContext, fallback: Double = 0.0): Double {
+        if (raw == null) return fallback
+        if (raw is Number) return raw.toDouble()
+        val resolved = ContextResolver.resolvePlaceholders(raw.toString(), context)
+        return MathEvaluator.eval(resolved)
+    }
+
     /**
      * Executes an effect supporting Libreforge optional arguments:
      * - chance: Percentage chance of activating (supports math expression)
-     * - cost: Vault economy monetary cost
-     * - every: Activates only every X triggers
+     * - cost & cost_currency / currency: Monetary cost via ZenHooksHub (default "vault")
+     * - mana_cost / resource_cost & resource_pool / pool: Resource cost via ZenStatEngine (default "mana")
+     * - every: Activates only every X triggers (supports math expression)
      * - require: Logical/math expression that must evaluate > 0 to run
-     * - delay: Ticks to wait before running
+     * - delay: Ticks to wait before running (supports math expression)
      * - repeat: Repeated execution (times, start, increment)
-     * - cooldown & cooldown_group & cooldown_message
+     * - cooldown & cooldown_group & cooldown_message (supports math expression)
      */
     fun executeEffect(effectId: String, context: ZenExecutionContext, rawArgs: Map<String, Any>, plugin: Plugin? = null) {
         val effect = effectRegistry.get(effectId) ?: return
@@ -119,8 +131,7 @@ open class ZenEngine {
         // 1. CHANCE CHECK
         val chanceRaw = rawArgs["chance"]
         if (chanceRaw != null) {
-            val chanceStr = ContextResolver.resolvePlaceholders(chanceRaw.toString(), context)
-            val chanceVal = MathEvaluator.eval(chanceStr)
+            val chanceVal = evalArgDouble(chanceRaw, context, 100.0)
             if (chanceVal < 100.0) {
                 val rolled = Math.random() * 100.0
                 if (rolled >= chanceVal) return
@@ -128,54 +139,91 @@ open class ZenEngine {
         }
 
         // 2. REQUIRE CHECK
-        val requireRaw = rawArgs["require"] as? String
+        val requireRaw = rawArgs["require"]
         if (requireRaw != null) {
-            val reqResolved = ContextResolver.resolvePlaceholders(requireRaw, context)
-            val reqResult = MathEvaluator.eval(reqResolved)
+            val reqResult = evalArgDouble(requireRaw, context, 0.0)
             if (reqResult <= 0.0) return
         }
 
         // 3. EVERY X COUNTER
-        val everyRaw = (rawArgs["every"] as? Number)?.toInt()
-        if (everyRaw != null && everyRaw > 1 && player != null) {
+        val everyVal = evalArgDouble(rawArgs["every"], context, 0.0).toInt()
+        if (everyVal > 1 && player != null) {
             val counterKey = "${player.uniqueId}:$effectId"
             val counter = executionCounters.computeIfAbsent(counterKey) { AtomicInteger(0) }
             val current = counter.incrementAndGet()
-            if (current % everyRaw != 0) return
+            if (current % everyVal != 0) return
         }
 
-        // 4. COOLDOWN CHECK
-        val cdRaw = (rawArgs["cooldown"] as? Number)?.toDouble() ?: 0.0
+        // 4. COOLDOWN PRE-CHECK
+        val cdRaw = evalArgDouble(rawArgs["cooldown"], context, 0.0)
         val cdGroup = (rawArgs["cooldown_group"] as? String) ?: effectId
+        val cdKey = if (player != null) "${player.uniqueId}:$cdGroup" else ""
         if (cdRaw > 0.0 && player != null) {
-            val cdKey = "${player.uniqueId}:$cdGroup"
-            if (!checkAndSetCooldown(cdKey, cdRaw, player)) {
+            val remainingSecs = getRemainingCooldown(cdKey, player)
+            if (remainingSecs > 0.0) {
                 val sendMsg = (rawArgs["send_cooldown_message"] as? Boolean) ?: true
                 if (sendMsg) {
-                    val remaining = String.format("%.1f", getRemainingCooldown(cdKey, player))
+                    val remaining = String.format(Locale.US, "%.1f", remainingSecs)
                     val defaultMsg = "<red>¡Esta habilidad está en enfriamiento! Espera <yellow>${remaining}s</yellow>.</red>"
                     val customMsg = (rawArgs["cooldown_message"] as? String)?.replace("%seconds%", remaining) ?: defaultMsg
-                    AdventureUtil.sendMessage(player, customMsg)
+                    runCatching { AdventureUtil.sendMessage(player, customMsg) }
                 }
                 return
             }
         }
 
-        // 5. VAULT COST CHECK
-        val costRaw = rawArgs["cost"]
-        if (costRaw != null && player != null && IntegrationHub.isVaultAvailable()) {
-            val costStr = ContextResolver.resolvePlaceholders(costRaw.toString(), context)
-            val costVal = MathEvaluator.eval(costStr)
-            if (costVal > 0.0) {
-                if (!IntegrationHub.hasMoney(player, costVal)) {
-                    AdventureUtil.sendMessage(player, "<red>No tienes suficiente dinero. Requiere <yellow>$costVal</yellow>.</red>")
-                    return
+        // 5. CURRENCY COST PRE-CHECK (Vault / ZenEconomy via ZenHooksHub)
+        val costVal = evalArgDouble(rawArgs["cost"], context, 0.0)
+        val costCurrency = (rawArgs["cost_currency"] ?: rawArgs["currency"] ?: "vault").toString()
+        if (costVal > 0.0 && player != null) {
+            if (!ZenHooksHub.hasAny(player, costCurrency, costVal)) {
+                val sendCostMsg = (rawArgs["send_cost_message"] as? Boolean) ?: true
+                if (sendCostMsg) {
+                    val costFormatted = if (costVal % 1.0 == 0.0) costVal.toLong().toString() else String.format(Locale.US, "%.2f", costVal)
+                    val customMsg = (rawArgs["cost_message"] as? String)
+                        ?.replace("%cost%", costFormatted)
+                        ?.replace("%currency%", costCurrency)
+                        ?: "<red>No tienes suficiente dinero. Requiere <yellow>$costFormatted $costCurrency</yellow>.</red>"
+                    runCatching { AdventureUtil.sendMessage(player, customMsg) }
                 }
-                IntegrationHub.withdrawMoney(player, costVal)
+                return
             }
         }
 
-        // 6. RESOLVE RUNTIME ARGS
+        // 6. MANA / RESOURCE COST PRE-CHECK
+        val resourceCostRaw = rawArgs["mana_cost"] ?: rawArgs["resource_cost"]
+        val resourceCostVal = evalArgDouble(resourceCostRaw, context, 0.0)
+        val resourcePool = (rawArgs["resource_pool"] ?: rawArgs["pool"] ?: "mana").toString()
+        if (resourceCostVal > 0.0 && player != null) {
+            if (!ZenStatEngine.hasResource(player.uniqueId, resourcePool, resourceCostVal)) {
+                val sendResourceMsg = (rawArgs["send_resource_message"] as? Boolean)
+                    ?: (rawArgs["send_mana_message"] as? Boolean)
+                    ?: true
+                if (sendResourceMsg) {
+                    val costFormatted = if (resourceCostVal % 1.0 == 0.0) resourceCostVal.toLong().toString() else String.format(Locale.US, "%.1f", resourceCostVal)
+                    val customMsg = ((rawArgs["resource_message"] ?: rawArgs["mana_message"]) as? String)
+                        ?.replace("%cost%", costFormatted)
+                        ?.replace("%amount%", costFormatted)
+                        ?.replace("%pool%", resourcePool)
+                        ?: "<red>No tienes suficiente <aqua>$resourcePool</aqua>. Requiere <yellow>$costFormatted</yellow>.</red>"
+                    runCatching { AdventureUtil.sendMessage(player, customMsg) }
+                }
+                return
+            }
+        }
+
+        // 7. COMMIT COOLDOWN & WITHDRAW COSTS
+        if (cdRaw > 0.0 && player != null) {
+            if (!checkAndSetCooldown(cdKey, cdRaw, player)) return
+        }
+        if (costVal > 0.0 && player != null) {
+            if (!ZenHooksHub.withdrawAny(player, costCurrency, costVal)) return
+        }
+        if (resourceCostVal > 0.0 && player != null) {
+            if (!ZenStatEngine.consumeResource(player.uniqueId, resourcePool, resourceCostVal)) return
+        }
+
+        // 8. RESOLVE RUNTIME ARGS
         val resolved = mutableMapOf<String, Any>()
         for ((k, v) in rawArgs) {
             if (v is String) {
@@ -185,17 +233,17 @@ open class ZenEngine {
             }
         }
 
-        // 7. EXECUTION DISPATCH (DELAY / REPEAT / DIRECT)
-        val delayTicks = (rawArgs["delay"] as? Number)?.toLong() ?: 0L
+        // 9. EXECUTION DISPATCH (DELAY / REPEAT / DIRECT)
+        val delayTicks = evalArgDouble(rawArgs["delay"], context, 0.0).toLong().coerceAtLeast(0L)
         @Suppress("UNCHECKED_CAST")
         val repeatCfg = rawArgs["repeat"] as? Map<String, Any>
 
         val pl = plugin ?: (runCatching { Bukkit.getPluginManager().getPlugin("ZenCore") }.getOrNull())
 
         if (repeatCfg != null && pl != null) {
-            val times = (repeatCfg["times"] as? Number)?.toInt() ?: 1
-            val start = (repeatCfg["start"] as? Number)?.toDouble() ?: 0.0
-            val increment = (repeatCfg["increment"] as? Number)?.toDouble() ?: 1.0
+            val times = evalArgDouble(repeatCfg["times"], context, 1.0).toInt().coerceAtLeast(1)
+            val start = evalArgDouble(repeatCfg["start"], context, 0.0)
+            val increment = evalArgDouble(repeatCfg["increment"], context, 1.0)
 
             var count = 0
             val period = (if (delayTicks > 0L) delayTicks else 20L)
@@ -229,10 +277,11 @@ open class ZenEngine {
     fun checkAndSetCooldown(key: String, cooldownSeconds: Double, holder: Player? = null): Boolean {
         if (cooldownSeconds <= 0.0) return true
         val now = System.currentTimeMillis()
+        val pdcKey = "cd_${key.replace(':', '_')}"
 
         // Check PDC if available
         if (holder != null && cooldownSeconds >= 30.0) {
-            val pdcExpire = ZenPDC.getLong(holder, "cd_$key", 0L)
+            val pdcExpire = runCatching { ZenPDC.getLong(holder, pdcKey, 0L) }.getOrDefault(0L)
             if (now < pdcExpire) return false
         }
 
@@ -243,7 +292,7 @@ open class ZenEngine {
         cooldowns[key] = newExpire
 
         if (holder != null && cooldownSeconds >= 30.0) {
-            ZenPDC.setLong(holder, "cd_$key", newExpire)
+            runCatching { ZenPDC.setLong(holder, pdcKey, newExpire) }
         }
         return true
     }
@@ -252,7 +301,8 @@ open class ZenEngine {
         val now = System.currentTimeMillis()
         var expire = cooldowns[key] ?: 0L
         if (holder != null) {
-            val pdcExpire = ZenPDC.getLong(holder, "cd_$key", 0L)
+            val pdcKey = "cd_${key.replace(':', '_')}"
+            val pdcExpire = runCatching { ZenPDC.getLong(holder, pdcKey, 0L) }.getOrDefault(0L)
             if (pdcExpire > expire) expire = pdcExpire
         }
         if (now >= expire) return 0.0

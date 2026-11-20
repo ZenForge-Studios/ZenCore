@@ -70,4 +70,36 @@ object ZenParticleShapes {
             world.spawnParticle(particle, center.x + x, center.y + y, center.z + z, 1, 0.0, 0.0, 0.0, 0.0)
         }
     }
+
+    @JvmStatic
+    fun spawnLine(
+        start: Location,
+        end: Location,
+        particle: Particle,
+        step: Double = 0.25,
+        countPerPoint: Int = 1
+    ) {
+        val world = start.world ?: return
+        if (end.world != world) return
+        val distance = start.distance(end)
+        if (distance <= 0.01) return
+        val safeStep = step.coerceAtLeast(0.05)
+        val steps = (distance / safeStep).toInt().coerceIn(1, 200)
+        val dx = (end.x - start.x) / steps
+        val dy = (end.y - start.y) / steps
+        val dz = (end.z - start.z) / steps
+        for (i in 0..steps) {
+            world.spawnParticle(
+                particle,
+                start.x + dx * i,
+                start.y + dy * i,
+                start.z + dz * i,
+                countPerPoint,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+            )
+        }
+    }
 }

@@ -1,18 +1,20 @@
 package com.cuac_xd.zencore.engine.effect.impl
 
+import com.cuac_xd.zencore.ZenCorePlugin
+import com.cuac_xd.zencore.drop.ZenDropEngine
 import com.cuac_xd.zencore.engine.context.ContextResolver
 import com.cuac_xd.zencore.engine.effect.EffectRegistry
 import com.cuac_xd.zencore.engine.effect.ZenEffect
+import com.cuac_xd.zencore.world.ZenWorldActions
 import org.bukkit.*
 import org.bukkit.block.data.Ageable
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
+import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
-import java.util.LinkedList
 import java.util.Locale
-import java.util.Queue
 
 object ExtendedEffects {
     @JvmStatic
@@ -73,13 +75,15 @@ object ExtendedEffects {
         registry.register("ARCTIC_FREEZE", freeze)
         registry.register("FREEZE_TARGET", freeze)
 
-        // AUTO REPLANT
-        registry.register("AUTO_REPLANT") { ctx, _ ->
-            val b = ctx.block ?: return@register
-            val data = b.blockData
-            if (data is Ageable && data.age >= data.maximumAge) {
-                val plugin = org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(ExtendedEffects::class.java)
-                val mat = b.type
+        // AUTO REPLANT / REPLANT CROPS
+        val replantCrops = ZenEffect { ctx, _ ->
+            val b = ctx.block ?: return@ZenEffect
+            val data = runCatching { b.blockData }.getOrNull() as? Ageable ?: return@ZenEffect
+            if (data.age < data.maximumAge) return@ZenEffect
+            val mat = b.type
+            val plugin = ZenCorePlugin.getInstance()
+                ?: runCatching { org.bukkit.plugin.java.JavaPlugin.getProvidingPlugin(ExtendedEffects::class.java) }.getOrNull()
+            if (ctx.event is BlockBreakEvent && plugin != null && Bukkit.getServer() != null) {
                 Bukkit.getScheduler().runTaskLater(plugin, Runnable {
                     b.type = mat
                     val newAge = b.blockData
@@ -88,25 +92,54 @@ object ExtendedEffects {
                         b.blockData = newAge
                     }
                 }, 2L)
+            } else {
+                ZenWorldActions.replantCrop(b)
             }
         }
+        registry.register("REPLANT_CROPS", replantCrops)
+        registry.register("AUTO_REPLANT", replantCrops)
 
-        // AUTO SMELT
-        registry.register("AUTO_SMELT") { ctx, _ ->
-            val b = ctx.block ?: return@register
-            val dropMat = when (b.type) {
-                Material.IRON_ORE, Material.DEEPSLATE_IRON_ORE, Material.RAW_IRON_BLOCK -> Material.IRON_INGOT
-                Material.GOLD_ORE, Material.DEEPSLATE_GOLD_ORE, Material.RAW_GOLD_BLOCK -> Material.GOLD_INGOT
-                Material.COPPER_ORE, Material.DEEPSLATE_COPPER_ORE, Material.RAW_COPPER_BLOCK -> Material.COPPER_INGOT
-                Material.ANCIENT_DEBRIS -> Material.NETHERITE_SCRAP
-                else -> null
+        // AUTO SMELT / AUTOSMELT / SMELT_ORE
+        val autoSmelt = ZenEffect { ctx, args ->
+            val b = ctx.block ?: return@ZenEffect
+            val rawDrops = runCatching {
+                val p = ctx.player
+                val tool = ctx.item
+                when {
+                    tool != null && p != null -> b.getDrops(tool, p)
+                    tool != null -> b.getDrops(tool)
+                    else -> b.drops
+                }
+            }.getOrDefault(emptyList())
+
+            val directSmelted = runCatching { ZenWorldActions.getSmeltedMaterial(b.type) }.getOrNull()
+            val hasDropSmelt = rawDrops.any { ZenWorldActions.getSmeltedMaterial(it.type) != null }
+            if (directSmelted == null && !hasDropSmelt) return@ZenEffect
+
+            val smeltedDrops = if (rawDrops.isNotEmpty()) {
+                ZenWorldActions.autoSmeltDrops(rawDrops)
+            } else {
+                listOf(ItemStack(directSmelted!!, 1))
             }
-            if (dropMat != null) {
-                b.type = Material.AIR
-                b.world.dropItemNaturally(b.location.add(0.5, 0.5, 0.5), ItemStack(dropMat, 1))
+
+            b.type = Material.AIR
+            val telekinesis = ContextResolver.getBoolean(args, "telekinesis", false)
+            val p = ctx.player
+            if (telekinesis && p != null) {
+                ZenDropEngine.give(p, smeltedDrops, dropToGround = true, notifyOverflow = false)
+            } else {
+                val dropLoc = b.location.add(0.5, 0.5, 0.5)
+                for (stack in smeltedDrops) {
+                    b.world.dropItemNaturally(dropLoc, stack)
+                }
+            }
+            runCatching {
                 b.world.spawnParticle(Particle.FLAME, b.location.add(0.5, 0.5, 0.5), 5, 0.2, 0.2, 0.2, 0.02)
             }
         }
+        registry.register("AUTOSMELT", autoSmelt)
+        registry.register("AUTO_SMELT", autoSmelt)
+        registry.register("SMELT_ORE", autoSmelt)
 
         // TELEPATHY
         registry.register("TELEPATHY") { ctx, _ ->
@@ -114,88 +147,53 @@ object ExtendedEffects {
             val b = ctx.block ?: return@register
             val drops = if (ctx.item != null) b.getDrops(ctx.item!!) else b.drops
             b.type = Material.AIR
-            for (d in drops) {
-                val leftovers = p.inventory.addItem(d)
-                leftovers.values.forEach { rem -> p.world.dropItemNaturally(p.location, rem) }
-            }
+            ZenDropEngine.give(p, drops.toList(), dropToGround = true, notifyOverflow = false)
         }
 
-        // TREE FELLER
-        registry.register("TREE_FELLER") { ctx, args ->
-            val start = ctx.block ?: return@register
-            if (!Tag.LOGS.isTagged(start.type)) return@register
-            val maxBlocks = ContextResolver.getInt(args, "max_blocks", 64)
-            val queue: Queue<org.bukkit.block.Block> = LinkedList()
-            val visited = mutableSetOf<org.bukkit.block.Block>()
-            queue.add(start)
-            visited.add(start)
-
-            var broken = 0
-            while (queue.isNotEmpty() && broken < maxBlocks) {
-                val cur = queue.poll()
-                if (Tag.LOGS.isTagged(cur.type)) {
-                    if (ctx.item != null) cur.breakNaturally(ctx.item!!)
-                    else cur.breakNaturally()
-                    broken++
-                    for (dx in -1..1) {
-                        for (dy in -1..1) {
-                            for (dz in -1..1) {
-                                val next = cur.getRelative(dx, dy, dz)
-                                if (visited.add(next) && Tag.LOGS.isTagged(next.type)) {
-                                    queue.add(next)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        // FELL TREE / TREE FELLER
+        val fellTree = ZenEffect { ctx, args ->
+            val p = ctx.player ?: return@ZenEffect
+            val start = ctx.block ?: return@ZenEffect
+            val maxLogs = ContextResolver.getInt(args, "max_logs", ContextResolver.getInt(args, "max_blocks", 64))
+            val telekinesis = ContextResolver.getBoolean(args, "telekinesis", ContextResolver.getBoolean(args, "drop_to_inventory", false))
+            ZenWorldActions.fellTree(p, start, maxLogs, telekinesis)
         }
+        registry.register("FELL_TREE", fellTree)
+        registry.register("TREE_FELLER", fellTree)
 
-        // VEIN MINE
-        registry.register("VEIN_MINE") { ctx, args ->
-            val start = ctx.block ?: return@register
-            val oreMat = start.type
-            val maxBlocks = ContextResolver.getInt(args, "max_blocks", 16)
-            val queue: Queue<org.bukkit.block.Block> = LinkedList()
-            val visited = mutableSetOf<org.bukkit.block.Block>()
-            queue.add(start)
-            visited.add(start)
-
-            var broken = 0
-            while (queue.isNotEmpty() && broken < maxBlocks) {
-                val cur = queue.poll()
-                if (cur.type == oreMat) {
-                    if (ctx.item != null) cur.breakNaturally(ctx.item!!)
-                    else cur.breakNaturally()
-                    broken++
-                    for (dx in -1..1) {
-                        for (dy in -1..1) {
-                            for (dz in -1..1) {
-                                val next = cur.getRelative(dx, dy, dz)
-                                if (visited.add(next) && next.type == oreMat) {
-                                    queue.add(next)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        // MINE VEIN / VEIN MINE
+        val mineVein = ZenEffect { ctx, args ->
+            val p = ctx.player ?: return@ZenEffect
+            val start = ctx.block ?: return@ZenEffect
+            val maxBlocks = ContextResolver.getInt(args, "max_blocks", 32)
+            val telekinesis = ContextResolver.getBoolean(args, "telekinesis", ContextResolver.getBoolean(args, "drop_to_inventory", false))
+            ZenWorldActions.mineVein(p, start, maxBlocks, telekinesis)
         }
+        registry.register("MINE_VEIN", mineVein)
+        registry.register("VEIN_MINE", mineVein)
 
         // MINE AREA
+        val mineAreaRunning = ThreadLocal.withInitial { false }
         registry.register("MINE_AREA") { ctx, args ->
+            if (mineAreaRunning.get()) return@register
             val start = ctx.block ?: return@register
             val radius = ContextResolver.getInt(args, "radius", 1)
-            for (x in -radius..radius) {
-                for (y in -radius..radius) {
-                    for (z in -radius..radius) {
-                        val b = start.getRelative(x, y, z)
-                        if (b.type != Material.BEDROCK && !b.type.isAir) {
-                            if (ctx.item != null) b.breakNaturally(ctx.item!!)
-                            else b.breakNaturally()
+            mineAreaRunning.set(true)
+            try {
+                for (x in -radius..radius) {
+                    for (y in -radius..radius) {
+                        for (z in -radius..radius) {
+                            if (x == 0 && y == 0 && z == 0) continue
+                            val b = start.getRelative(x, y, z)
+                            if (b.type != Material.BEDROCK && !b.type.isAir) {
+                                if (ctx.item != null) b.breakNaturally(ctx.item!!)
+                                else b.breakNaturally()
+                            }
                         }
                     }
                 }
+            } finally {
+                mineAreaRunning.set(false)
             }
         }
 

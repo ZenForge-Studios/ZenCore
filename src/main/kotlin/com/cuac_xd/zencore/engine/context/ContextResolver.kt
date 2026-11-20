@@ -1,5 +1,8 @@
 package com.cuac_xd.zencore.engine.context
 
+import com.cuac_xd.zencore.integration.IntegrationHub
+import com.cuac_xd.zencore.party.ZenPartyHub
+import com.cuac_xd.zencore.stat.ZenStatEngine
 import com.cuac_xd.zencore.util.MathEvaluator
 import org.bukkit.Location
 import org.bukkit.block.Block
@@ -114,24 +117,85 @@ object ContextResolver {
         s = s.replace("%damage%", ctx.damage.toString())
         val p = ctx.player
         if (p != null) {
-            s = s.replace("%player%", p.name)
-            s = s.replace("%player_name%", p.name)
-            s = s.replace("%player_health%", p.health.toString())
-            s = s.replace("%player_food%", p.foodLevel.toString())
-            s = s.replace("%player_x%", p.location.x.toString())
-            s = s.replace("%player_y%", p.location.y.toString())
-            s = s.replace("%player_z%", p.location.z.toString())
+            val playerName = runCatching { p.name }.getOrNull()
+            if (playerName != null) {
+                s = s.replace("%player%", playerName)
+                s = s.replace("%player_name%", playerName)
+            }
+            if (s.contains("%player_health%")) {
+                s = s.replace("%player_health%", runCatching { p.health.toString() }.getOrDefault("0"))
+            }
+            if (s.contains("%player_food%")) {
+                s = s.replace("%player_food%", runCatching { p.foodLevel.toString() }.getOrDefault("0"))
+            }
+            if (s.contains("%player_x%") || s.contains("%player_y%") || s.contains("%player_z%")) {
+                val loc = runCatching { p.location }.getOrNull()
+                if (loc != null) {
+                    s = s.replace("%player_x%", loc.x.toString())
+                    s = s.replace("%player_y%", loc.y.toString())
+                    s = s.replace("%player_z%", loc.z.toString())
+                }
+            }
+            if (s.contains("%party_size%") || s.contains("%party_leader%") || s.contains("%in_party%")) {
+                val party = runCatching { ZenPartyHub.getPartyByPlayer(p.uniqueId) }.getOrNull()
+                s = s.replace("%party_size%", (party?.size ?: 0).toString())
+                s = s.replace("%party_leader%", party?.leaderName ?: "")
+                s = s.replace("%in_party%", (party != null).toString())
+            }
+            if (s.contains("%mana%") || s.contains("%max_mana%")) {
+                val mana = runCatching { ZenStatEngine.getResource(p.uniqueId, "mana") }.getOrDefault(0.0)
+                val maxMana = runCatching { ZenStatEngine.getMaxResource(p.uniqueId, "mana") }.getOrDefault(100.0)
+                s = s.replace("%mana%", mana.toString())
+                s = s.replace("%max_mana%", maxMana.toString())
+            }
+            if (s.contains("%booster_")) {
+                if (s.contains("%booster_multiplier%")) {
+                    val defaultCat = (ctx.data["booster_category"] ?: ctx.data["category"] ?: "xp").toString()
+                    val mul = runCatching {
+                        com.cuac_xd.zencore.booster.ZenBoosterEngine.getMultiplier(p.uniqueId, defaultCat)
+                    }.getOrDefault(1.0)
+                    s = s.replace("%booster_multiplier%", mul.toString())
+                }
+                if (s.contains("%booster_multiplier_")) {
+                    val catRegex = Regex("%booster_multiplier_([a-zA-Z0-9_-]+)%")
+                    s = catRegex.replace(s) { match ->
+                        val cat = match.groupValues[1]
+                        val mul = runCatching {
+                            com.cuac_xd.zencore.booster.ZenBoosterEngine.getMultiplier(p.uniqueId, cat)
+                        }.getOrDefault(1.0)
+                        mul.toString()
+                    }
+                }
+                if (s.contains("%booster_has_")) {
+                    val hasRegex = Regex("%booster_has_([a-zA-Z0-9_-]+)%")
+                    s = hasRegex.replace(s) { match ->
+                        val cat = match.groupValues[1]
+                        val active = runCatching {
+                            com.cuac_xd.zencore.booster.ZenBoosterEngine.hasActiveBooster(p.uniqueId, cat)
+                        }.getOrDefault(false)
+                        active.toString()
+                    }
+                }
+            }
         }
         val t = ctx.target
         if (t != null) {
-            s = s.replace("%victim%", t.name)
-            s = s.replace("%victim_name%", t.name)
-            s = s.replace("%target%", t.name)
-            s = s.replace("%victim_health%", t.health.toString())
+            val victimName = runCatching { t.name }.getOrNull()
+            if (victimName != null) {
+                s = s.replace("%victim%", victimName)
+                s = s.replace("%victim_name%", victimName)
+                s = s.replace("%target%", victimName)
+            }
+            if (s.contains("%victim_health%")) {
+                s = s.replace("%victim_health%", runCatching { t.health.toString() }.getOrDefault("0"))
+            }
         }
         for ((k, v) in ctx.data) {
             s = s.replace("%$k%", v.toString())
             s = s.replace("{$k}", v.toString())
+        }
+        if (p != null && s.contains("%") && IntegrationHub.isPlaceholderApiAvailable()) {
+            s = runCatching { IntegrationHub.setPlaceholders(p, s) }.getOrDefault(s)
         }
         return s
     }

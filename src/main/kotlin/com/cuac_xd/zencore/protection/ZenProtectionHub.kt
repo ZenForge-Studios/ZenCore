@@ -17,6 +17,7 @@ object ZenProtectionHub {
     }
 
     private val hooks = mutableListOf<ProtectionHook>()
+    private val checkingBreak = ThreadLocal.withInitial { false }
 
     @JvmStatic
     fun registerHook(hook: ProtectionHook) {
@@ -24,13 +25,33 @@ object ZenProtectionHub {
     }
 
     @JvmStatic
-    fun canBreak(player: Player, block: Block): Boolean {
+    fun isSimulatingBreak(): Boolean = checkingBreak.get()
+
+    /**
+     * Checks only registered ProtectionHooks without firing a synthetic BlockBreakEvent.
+     * Ideal for use inside an active BlockBreakEvent or BlockPlaceEvent listener.
+     */
+    @JvmStatic
+    fun checkHooksOnly(player: Player, block: Block): Boolean {
         for (h in hooks) {
             if (!h.canBreak(player, block)) return false
         }
-        val testEvent = BlockBreakEvent(block, player)
-        org.bukkit.Bukkit.getPluginManager().callEvent(testEvent)
-        return !testEvent.isCancelled
+        return true
+    }
+
+    @JvmStatic
+    fun canBreak(player: Player, block: Block): Boolean {
+        if (!checkHooksOnly(player, block)) return false
+        if (checkingBreak.get()) return true
+
+        checkingBreak.set(true)
+        return try {
+            val testEvent = BlockBreakEvent(block, player)
+            org.bukkit.Bukkit.getPluginManager().callEvent(testEvent)
+            !testEvent.isCancelled
+        } finally {
+            checkingBreak.set(false)
+        }
     }
 
     @JvmStatic
